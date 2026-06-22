@@ -41,8 +41,8 @@ Built using a **Flask Backend** and a custom **Vanilla HTML/JS Frontend** styled
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/macro-sentiment-terminal.git
-cd macro-sentiment-terminal
+git clone https://github.com/worstcod/Sentiment-Analysis.git
+cd Sentiment-Analysis
 ```
 
 ### 2. Create a Virtual Environment (Recommended)
