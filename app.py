@@ -13,21 +13,30 @@ import re
 # ---------------------------------------------------------
 # Global AI Sentiment Model Initialization (RAM Optimized)
 # ---------------------------------------------------------
-# Load FinBERT globally exactly once at server startup to respect 1GB RAM limit.
-# Includes fallback rules-based sentiment classifier if model loading fails or OOM occurs.
-try:
-    # Set PyTorch thread count to 1 to minimize memory footprint on low-resource hosting (Render free tier)
-    import torch
-    torch.set_num_threads(1)
-    
-    from transformers import pipeline
-    sentiment_analyzer = pipeline("sentiment-analysis", model="ProsusAI/finbert")
-    nlp_engine_name = "FinBERT (AI Mode)"
-    print("Success: FinBERT pipeline loaded globally.")
-except Exception as e:
+# Automatically disable heavy AI model if running on Render free tier (512MB RAM limit)
+# to prevent kernel OOM (Out Of Memory) SIGKILLs, unless FORCE_AI_MODE is set.
+disable_ai = os.environ.get("DISABLE_AI_MODE", "false").lower() == "true"
+on_render = os.environ.get("RENDER") == "true"
+force_ai = os.environ.get("FORCE_AI_MODE", "false").lower() == "true"
+
+if disable_ai or (on_render and not force_ai):
     sentiment_analyzer = None
-    nlp_engine_name = f"Lexicon Fallback Mode (Model Load Error: {str(e)[:100]})"
-    print(f"Warning: Failed to load FinBERT pipeline ({e}). Reverting to Lexicon Fallback.")
+    nlp_engine_name = "Lexicon Fallback Mode (Low Memory Mode)"
+    print("Low Memory Mode Active: PyTorch and FinBERT imports bypassed to stay under 512MB RAM.")
+else:
+    try:
+        # Set PyTorch thread count to 1 to minimize memory footprint on low-resource hosting
+        import torch
+        torch.set_num_threads(1)
+        
+        from transformers import pipeline
+        sentiment_analyzer = pipeline("sentiment-analysis", model="ProsusAI/finbert")
+        nlp_engine_name = "FinBERT (AI Mode)"
+        print("Success: FinBERT pipeline loaded globally.")
+    except Exception as e:
+        sentiment_analyzer = None
+        nlp_engine_name = f"Lexicon Fallback Mode (Model Load Error: {str(e)[:100]})"
+        print(f"Warning: Failed to load FinBERT pipeline ({e}). Reverting to Lexicon Fallback.")
 
 # Simple, high-performance financial lexicon-based sentiment analyzer
 def analyze_lexicon_sentiment(text):
