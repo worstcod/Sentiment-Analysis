@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide - Macro-Economic Sentiment Terminal</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        terminalBg: '#0A0D14',
+                        cardBg: '#0D1117',
+                        borderCol: '#30363D',
+                        accentCyan: '#00F3FF',
+                        accentGold: '#FFD700',
+                        bullishGreen: '#00E676',
+                        bearishRed: '#FF1744',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-terminalBg text-slate-200 min-h-screen p-6 md:p-12 font-sans selection:bg-accentCyan/30">
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="border-b border-borderCol pb-6">
+            <h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                <span class="text-accentCyan">📖</span> User & Operations Guide
+            </h1>
+            <p class="text-slate-400 mt-2">
+                Comprehensive guide to navigating, understanding, and utilizing the Macro-Economic Sentiment Terminal.
+            </p>
+        </header>
+
+        <!-- Section 1: Dashboard Overview -->
+        <section class="bg-cardBg border border-borderCol rounded-xl p-6 shadow-xl space-y-4">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="text-accentCyan">1.</span> Quick Start Guide
+            </h2>
+            <p class="text-sm text-slate-300 leading-relaxed">
+                The terminal correlates historical price movements of major financial assets with breaking geopolitical and macroeconomic news events. To run a query:
+            </p>
+            <ol class="list-decimal list-inside text-sm text-slate-400 space-y-2 pl-2">
+                <li><strong class="text-slate-300">Select Asset Class:</strong> Choose between Stocks, Cryptocurrencies, Indices, Commodities, Forex, or Multi-Asset Comparisons.</li>
+                <li><strong class="text-slate-300">Select Preset/Custom Ticker:</strong> Select a pre-configured ticker or enter a manual ticker symbol. In Custom mode, you can compare multiple symbols by separating them with commas (e.g., <code class="bg-terminalBg px-1.5 py-0.5 rounded font-mono text-xs text-accentCyan">AAPL,MSFT,NVDA</code>).</li>
+                <li><strong class="text-slate-300">Event Keyword Search:</strong> Enter the news keyword to align with price history. You can search for multiple keywords by separating them with a plus sign (<code class="bg-terminalBg px-1.5 py-0.5 rounded font-mono text-xs text-accentCyan">+</code>), which searches Google News using an <code class="text-accentCyan">OR</code> operator logic (e.g. <code class="bg-terminalBg px-1.5 py-0.5 rounded font-mono text-xs text-accentCyan">Inflation+Interest Rate</code> matches stories containing either term).</li>
+                <li><strong class="text-slate-300">Set Date Range:</strong> Choose start and end boundaries (it is recommended to use a window of 30 to 90 days for optimal readability).</li>
+                <li>Click <strong class="text-accentCyan">Generate Analysis</strong> to fetch market indices, download feed entries, run the FinBERT sentiment model, and map markers.</li>
+            </ol>
+        </section>
+
+        <!-- Section 2: Mathematical Formulations -->
+        <section class="bg-cardBg border border-borderCol rounded-xl p-6 shadow-xl space-y-6">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="text-accentCyan">2.</span> Quantitative Metrics & Math (In-Depth)
+            </h2>
+            
+            <div class="space-y-6 text-sm">
+                <!-- Volatility -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Annualized Volatility (Standard Deviation)</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> Volatility measures the spread or dispersion of an asset's daily price swings. A higher volatility means the price undergoes larger and more frequent spikes or drops. To make volatility comparable across different timelines, we convert the daily return dispersion into annual terms.
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> The daily return standard deviation is scaled by the square root of the asset class's standard annual trading session count ($N$):
+                    </p>
+                    <div class="bg-terminalBg/50 p-3 rounded text-center font-mono text-xs text-accentCyan">
+                        &sigma;<sub>annualized</sub> = &sigma;<sub>daily</sub> &times; &radic;N
+                    </div>
+                    <p class="text-[11px] text-slate-500">
+                        Where $N = 365$ for Cryptocurrencies (trade 24/7), $N = 260$ for Forex pairs (trade 5 days/week plus overnight), and $N = 252$ for Stocks/Commodities (normal exchange trading sessions).
+                    </p>
+                </div>
+
+                <!-- Drawdown -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Maximum Drawdown</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> Maximum Drawdown measures the largest cumulative drop in the asset's price from its peak value to its lowest trough during the selected timeline. It represents the "worst-case scenario" loss you would have experienced if you bought at the absolute peak and sold at the absolute bottom.
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> At each day $t$, we compute the percentage distance from the highest price observed up to that point ($RollingMax$):
+                    </p>
+                    <div class="bg-terminalBg/50 p-3 rounded text-center font-mono text-xs text-accentCyan">
+                        Drawdown(t) = (Price(t) - RollingMax(t)) / RollingMax(t)
+                    </div>
+                    <p class="text-[11px] text-slate-500">
+                        The minimum value recorded across the entire daily series represents the Maximum Drawdown (the deepest drop).
+                    </p>
+                </div>
+
+                <!-- Rebase -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Indexed Standardization (Rebased to 100)</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> If comparing Apple (priced at \$180) and Bitcoin (priced at \$65,000) on the same chart, the scale difference makes direct visual comparison impossible. To fix this, we rebase both prices to start at exactly 100 on the first day of the selected period.
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> Every daily price is divided by the first day's closing price and multiplied by 100:
+                    </p>
+                    <div class="bg-terminalBg/50 p-3 rounded text-center font-mono text-xs text-accentCyan">
+                        Price<sub>indexed</sub>(t) = (Price(t) / Price(T<sub>first</sub>)) &times; 100
+                    </div>
+                    <p class="text-[11px] text-slate-500">
+                        A reading of 105 on the comparison chart represents a net 5% gain since the beginning of the period, regardless of the asset's raw price.
+                    </p>
+                </div>
+
+                <!-- Pearson Correlation -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Pearson Daily Return Correlation Matrix</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> In Multi-Asset Comparison mode, the terminal computes a daily returns correlation matrix to show how closely the assets moved together. Coefficients range from -1.00 (perfect opposite moves) to +1.00 (perfect parallel moves), with 0.00 representing completely independent moves.
+                    </p>
+                </div>
+
+                <!-- Sharpe Ratio -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Annualized Sharpe Ratio</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> The Sharpe Ratio measures "risk-adjusted return". It answers the question: <em>Is this asset's return worth the price swings (volatility) you had to endure, or could you have made a safer return elsewhere?</em>
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> Annualized returns are calculated by multiplying the daily average return by the session count ($N$), and standard deviations are annualized by multiplying daily returns standard deviation by $\sqrt{N}$. We assume a default risk-free rate ($R_f$) of $4.0\%$ ($0.04$):
+                    </p>
+                    <div class="bg-terminalBg/50 p-3 rounded text-center font-mono text-xs text-accentCyan">
+                        Sharpe = (Mean(R<sub>daily</sub>) &times; N - R<sub>f</sub>) / (Std(R<sub>daily</sub>) &times; &radic;N)
+                    </div>
+                    <div class="text-[11px] text-slate-500 space-y-1">
+                        <p><strong>How to interpret the Sharpe Ratio:</strong></p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li><span class="text-rose-400">&lt; 0.0:</span> Bad (you underperformed safe US government bonds).</li>
+                            <li><span class="text-slate-300">0.0 - 1.0:</span> Suboptimal to acceptable risk-adjusted return.</li>
+                            <li><span class="text-sky-400">&gt; 1.0:</span> Good (high return relative to price swings).</li>
+                            <li><span class="text-emerald-400">&gt; 2.0:</span> Excellent.</li>
+                            <li><span class="text-accentCyan">&gt; 3.0:</span> Outstanding/Elite.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Market Beta -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Systematic Risk (Market Beta)</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> Beta ($\beta$) measures how much an asset's price moves when the broader market benchmark moves. It tells you if the asset acts as a high-sensitivity market amplifier or a defensive hedge.
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> Beta is the covariance of the asset's daily returns with the market benchmark's returns, divided by the variance of the market returns:
+                    </p>
+                    <div class="bg-terminalBg/50 p-3 rounded text-center font-mono text-xs text-accentCyan">
+                        &beta; = Covariance(R<sub>asset</sub>, R<sub>market</sub>) / Variance(R<sub>market</sub>)
+                    </div>
+                    <div class="text-[11px] text-slate-500 space-y-1">
+                        <p><strong>Benchmark Configuration:</strong></p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li><strong>Single Ticker Mode:</strong> Benchmark defaults to the S&P 500 (`^GSPC`) or Bitcoin (`BTC-USD`) if the ticker is a cryptocurrency.</li>
+                            <li><strong>Comparison Mode:</strong> Benchmark defaults to the <em>first (primary) ticker</em> entered in the basket, evaluating how other tickers fluctuate relative to it.</li>
+                        </ul>
+                        <p class="mt-1"><strong>How to interpret Beta:</strong></p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li><span class="text-slate-300">&beta; = 1.0:</span> Moves in lockstep with the market benchmark.</li>
+                            <li><span class="text-sky-400">&beta; &gt; 1.0:</span> High sensitivity (e.g. if market rises 10%, asset rises 15%; if market drops 10%, asset drops 15%).</li>
+                            <li><span class="text-amber-500">&beta; &lt; 1.0:</span> Defensive (e.g. utilities, gold; less sensitive to market shocks).</li>
+                            <li><span class="text-rose-400">&beta; &lt; 0.0:</span> Moves in the opposite direction of the market benchmark.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Lead-Lag Analysis -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">News Sentiment Lead-Lag Analysis</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> This analysis answers the ultimate trading question: <em>Does news sentiment predict the price, or is price movement driving the news stories?</em>
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> We shift the daily sentiment series by lag $k$ (from -3 to +3 days) and compute its Pearson correlation with the daily asset returns series:
+                    </p>
+                    <div class="bg-terminalBg/50 p-3 rounded text-center font-mono text-xs text-accentCyan">
+                        Lead-Lag Corr(k) = Correlation(Sentiment(t - k), Returns(t))
+                    </div>
+                    <div class="text-[11px] text-slate-500 space-y-1">
+                        <p><strong>How to read the Bar Chart:</strong></p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li><strong>Positive Lags (+1d, +2d, +3d):</strong> Correlates past sentiment with today's returns. If these bars are tall and positive, **News Sentiment LEADS (predicts) Price**.</li>
+                            <li><strong>Lag 0d (Same-Day):</strong> Shows contemporaneous same-day reaction.</li>
+                            <li><strong>Negative Lags (-1d, -2d, -3d):</strong> Correlates future sentiment with today's returns. If these bars are tall, **Price LEADS News** (news reports are just reacting to previous price trends).</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Event Study -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Event Study & Cumulative Abnormal Returns (CAR)</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> Isolates the occurrence of specific news articles (events) and aggregates the price behavior of the asset in the trading days surrounding the announcement. By using a benchmark market index, we filter out systematic market movements to compute the pure abnormal response triggered by the news.
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> For each news event $i$, we compute the daily Abnormal Return ($AR_{it}$) by running an OLS linear regression of the asset's returns against a market benchmark (S&P 500 or Bitcoin) over the full history to estimate systematic risk coefficients ($\alpha_i, \beta_i$):
+                    </p>
+                    <div class="bg-terminalBg/50 p-2.5 rounded text-center font-mono text-xs text-accentCyan">
+                        AR<sub>it</sub> = R<sub>it</sub> - (&alpha;<sub>i</sub> + &beta;<sub>i</sub> &times; R<sub>mt</sub>)
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        We accumulate these abnormal returns across the event window offsets $\tau \in \{-10, \dots, +10\}$, rebasing day 0 to exactly 0%:
+                    </p>
+                    <div class="bg-terminalBg/50 p-2.5 rounded text-center font-mono text-xs text-accentCyan">
+                        CAR<sub>i</sub>(&tau;) = &Sigma; AR<sub>i, t+j</sub> &times; 100
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>Statistical Significance at t = +5 Days:</strong> To verify if the post-event drift is genuine or statistical noise, the terminal calculates a two-tailed p-value at day +5. It computes the sample standard deviation ($s$) of day +5 returns across all events, derives the Standard Error ($SE = s / \sqrt{n}$), and evaluates the t-statistic ($t = \overline{CAR}(5) / SE$) using a high-precision logistic approximation of the standard normal CDF ($\Phi$):
+                    </p>
+                    <div class="bg-terminalBg/50 p-2.5 rounded text-center font-mono text-xs text-accentCyan">
+                        p-value = 2 &times; (1 - &Phi;(|t|)) &nbsp;&bull;&nbsp; &Phi;(|t|) &approx; 1 / (1 + e<sup>-y</sup>) where y = |t| &times; (1.5976 + 0.07056 &times; |t|<sup>2</sup>)
+                    </div>
+                    <p class="text-[11px] text-slate-500">
+                        If the resulting p-value is less than $0.05$ ($5\%$), the cumulative abnormal response is statistically significant (we reject the null hypothesis of no event effect), flagged with an asterisk (`*`) in the chart legend.
+                    </p>
+                </div>
+ 
+                <!-- Strategy Simulation -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Friction-Adjusted Sentiment Strategy Backtester</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> Simulates the performance of an algorithmic trading model that systematically trades the asset based on incoming news sentiment, incorporating realistic transaction costs to ensure professional-grade accuracy.
+                    </p>
+                    <div class="text-[11px] text-slate-500 space-y-2">
+                        <p><strong>Trading Rules:</strong></p>
+                        <ul class="list-disc list-inside space-y-1.5">
+                            <li><strong>Go Long (+1):</strong> Enters a long position if the daily average news sentiment is greater than $+0.15$.</li>
+                            <li><strong>Go Short (-1):</strong> Enters a short position if the daily average news sentiment is less than $-0.15$.</li>
+                            <li><strong>Causality Lag:</strong> Signals are lagged by 1 trading day ($Signal_{t-1}$) relative to asset returns ($R_t$). This ensures you only trade at the close *after* news sentiment becomes public, preventing look-ahead bias.</li>
+                            <li><strong>Time-Decay Liquidation:</strong> If no news matching the keyword is published for 5 consecutive trading days, the position automatically decays and liquidates to cash ($0$) to mitigate holding risk.</li>
+                            <li><strong>Transaction Friction Model (0.15%):</strong> Applies a 0.15% fee (covering 0.10% broker commissions and 0.05% bid-ask slippage spread) on position turnover:
+                              <div class="bg-terminalBg/50 p-2 my-1 rounded text-center font-mono text-xs text-accentCyan">
+                                  Friction<sub>t</sub> = |Signal<sub>t-1</sub> - Signal<sub>t-2</sub>| &times; 0.0015
+                              </div>
+                              For example, shifting from Long ($+1$) to Short ($-1$) represents a turnover of 2 units, incurring a $2 \times 0.15\% = 0.30\%$ transaction drag.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Visual Guide & Legend -->
+        <section class="bg-cardBg border border-borderCol rounded-xl p-6 shadow-xl space-y-4">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="text-accentCyan">3.</span> Dashboard Workspace Tabs & Legend
+            </h2>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                The terminal separates core visualizations and advanced quantitative calculations into two dedicated workspaces:
+            </p>
+            <div class="bg-terminalBg/50 p-4 rounded text-xs border border-borderCol/50 space-y-3">
+                <p class="text-slate-300">
+                    <strong>1. 📊 Market Overview Tab:</strong> Loads the core asset price overlay chart, the 20-day Simple Moving Average (dashed gold line), news sentiment triangles (green for bullish, red for bearish, gray for neutral), trading volume subplot (buying volume in green, selling volume in red), the full contextual news list, and the daily returns correlation matrix in comparison mode.
+                </p>
+                <p class="text-slate-300">
+                    <strong>2. ⚡ Pro Quant Terminal Tab:</strong> Loads risk-adjusted quantitative metrics cards (Sharpe Ratio, Market Beta, and cumulative strategy return percentage) along with three advanced Plotly charts (Lead-Lag correlation bar chart, Event Study trajectory lines, and the Backtest simulation equity curves).
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-400 pt-2">
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-200">Price Chart Legend</h3>
+                    <ul class="list-disc list-inside space-y-1.5 pl-1">
+                        <li><strong class="text-accentCyan">Cyan Line:</strong> Daily closing price.</li>
+                        <li><strong class="text-accentGold">Gold Dashed Line:</strong> 20-Day Simple Moving Average (SMA-20) representing support levels.</li>
+                        <li><strong class="text-bullishGreen">Green Triangles:</strong> Bullish news event overlays.</li>
+                        <li><strong class="text-bearishRed">Red Triangles:</strong> Bearish news event overlays.</li>
+                        <li><strong class="text-slate-400">Gray Circles:</strong> Neutral news event overlays.</li>
+                    </ul>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-200">Volume Subplot</h3>
+                    <ul class="list-disc list-inside space-y-1.5 pl-1">
+                        <li><strong class="text-bullishGreen">Green Bars:</strong> Days where price closed higher than the previous day.</li>
+                        <li><strong class="text-bearishRed">Red Bars:</strong> Days where price closed lower than the previous day.</li>
+                        <li>Height represents total trading volume, illustrating buying pressure or panic selling.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Quant Alignment Fixes -->
+        <section class="bg-cardBg border border-borderCol rounded-xl p-6 shadow-xl space-y-4">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="text-accentCyan">4.</span> Technical Integrity & Causality Controls
+            </h2>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                To guarantee academic-grade scientific accuracy and prevent look-ahead bias, the terminal enforces a <strong class="text-slate-200">Causality Control System</strong>:
+            </p>
+            <div class="bg-terminalBg/50 p-4 rounded text-xs border border-borderCol/50 space-y-2">
+                <p class="text-slate-300">
+                    <strong>Backward-Fill news date mappings:</strong> In traditional models, weekend news is often aligned to Friday's price. This violates causality because Friday's close occurred before Saturday's news broke. The terminal maps weekend and overnight stories to the close of the <em>next available trading session</em> (Monday's close).
+                </p>
+                <p class="text-slate-300">
+                    <strong>LRU Cache Architecture:</strong> Multi-worker environments cache calls to Yahoo Finance and Google News on a per-ticker and per-date basis, preventing external server throttling and keeping processing lag below 50ms.
+                </p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-xs text-slate-500 pt-4 border-t border-borderCol/50">
+            Macro-Economic Sentiment Terminal &bull; Open-Source Quantitative Project
+        </footer>
+
+    </div>
+
+</body>
+</html>

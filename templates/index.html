@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macro-Economic Sentiment Terminal</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Plotly.js CDN -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+
+    <!-- Tailwind Config Customizations -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        terminalBg: '#0A0D14',
+                        cardBg: '#0D1117',
+                        borderCol: '#30363D',
+                        accentCyan: '#00F3FF',
+                        bullishGreen: '#00E676',
+                        bearishRed: '#FF1744',
+                        neutralGray: '#90A4AE',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbar for news feed container */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0D1117;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #30363D;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #8B949E;
+        }
+    </style>
+</head>
+<body class="bg-terminalBg text-slate-200 min-h-screen p-4 md:p-6 font-sans">
+
+    <!-- Outer Container -->
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Title Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-borderCol pb-4">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                    <span class="text-accentCyan">📈</span> Macro-Economic Sentiment Terminal
+                </h1>
+                <p class="text-xs md:text-sm text-slate-400 mt-1">
+                    Universal price action overlay tool correlated with global news feeds and FinBERT AI sentiment.
+                </p>
+            </div>
+            <!-- Status and Guide Row -->
+            <div class="flex items-center gap-3 mt-2 md:mt-0">
+                <a href="/guide" target="_blank" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-borderCol rounded-full text-xs font-semibold flex items-center gap-1.5 transition">
+                    📖 User Guide
+                </a>
+                <!-- Status Pill -->
+                <div id="engine-status" class="px-3 py-1 bg-cardBg border border-borderCol rounded-full text-xs text-slate-400 flex items-center gap-2 w-max">
+                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                    System Ready
+                </div>
+            </div>
+        </header>
+
+        <!-- Top Row: Input Control Form -->
+        <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl">
+            <form id="analyze-form" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
+                <!-- Asset Category -->
+                <div>
+                    <label for="asset-category" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Asset Class</label>
+                    <select id="asset-category" class="w-full bg-terminalBg border border-borderCol rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accentCyan transition">
+                        <option value="stocks">Global Equities (Stocks)</option>
+                        <option value="crypto">Digital Assets (Crypto)</option>
+                        <option value="indices">World Indices</option>
+                        <option value="commodities">Commodities</option>
+                        <option value="forex">Forex (Pairs)</option>
+                        <option value="comparison">Multi-Asset Comparison</option>
+                        <option value="custom">Custom Ticker(s)</option>
+                    </select>
+                </div>
+                <!-- Ticker Select Dropdown -->
+                <div id="ticker-select-container">
+                    <label for="ticker-select" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Select Asset</label>
+                    <select id="ticker-select" class="w-full bg-terminalBg border border-borderCol rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accentCyan transition">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <!-- Custom Ticker Text Input (Hidden by default) -->
+                <div id="ticker-custom-container" class="hidden">
+                    <label for="ticker-custom" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Custom Ticker</label>
+                    <input type="text" id="ticker-custom" placeholder="e.g. AAPL"
+                        class="w-full bg-terminalBg border border-borderCol rounded-lg px-3 py-2 text-white font-mono placeholder-slate-600 focus:outline-none focus:border-accentCyan transition">
+                </div>
+                <div>
+                    <label for="keyword" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Event Keyword Search</label>
+                    <input type="text" id="keyword" name="keyword" value="Strait of Hormuz" required
+                        class="w-full bg-terminalBg border border-borderCol rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-accentCyan transition">
+                </div>
+                <div>
+                    <label for="startDate" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" required
+                        class="w-full bg-terminalBg border border-borderCol rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accentCyan transition">
+                </div>
+                <div>
+                    <label for="endDate" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">End Date</label>
+                    <input type="date" id="endDate" name="endDate" required
+                        class="w-full bg-terminalBg border border-borderCol rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accentCyan transition">
+                </div>
+                <div>
+                    <button type="submit" id="submit-btn"
+                        class="w-full bg-accentCyan hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-cyan-500/20 active:scale-98 transition duration-200">
+                        Generate Analysis
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Second Row: Dynamic Performance Metric Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <!-- Asset Performance Metric Card -->
+            <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between min-h-[90px]">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Asset Performance</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="price-card-value" class="text-2xl font-bold text-white">-</span>
+                    <span id="price-card-delta" class="text-sm font-bold text-neutralGray">-</span>
+                </div>
+            </div>
+            <!-- Volatility Metric Card -->
+            <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between min-h-[90px]">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Volatility (Std Dev)</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="volatility-card-value" class="text-2xl font-bold text-white">-</span>
+                    <span class="text-xs text-slate-400">Daily Return StDev</span>
+                </div>
+            </div>
+            <!-- Max Drawdown Metric Card -->
+            <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between min-h-[90px]">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Max Drawdown</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="drawdown-card-value" class="text-2xl font-bold text-rose-500">-</span>
+                    <span class="text-xs text-slate-400">Peak-to-Trough Drop</span>
+                </div>
+            </div>
+            <!-- News Volume Card -->
+            <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between min-h-[90px]">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">News Coverage Volume</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="news-card-volume" class="text-2xl font-bold text-accentCyan">-</span>
+                    <span id="news-card-topic" class="text-xs text-slate-400 italic">No topic active</span>
+                </div>
+            </div>
+            <!-- Aggregate Sentiment Card -->
+            <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between min-h-[90px]">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Aggregate Sentiment Index</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="sentiment-card-value" class="text-2xl font-bold text-white">-</span>
+                    <span id="sentiment-card-score" class="text-sm font-bold text-neutralGray">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay (Initial Hidden) -->
+        <div id="loader" class="hidden bg-cardBg border border-borderCol rounded-xl p-8 flex flex-col items-center justify-center space-y-4 shadow-2xl">
+            <div class="w-12 h-12 border-4 border-accentCyan border-t-transparent rounded-full animate-spin"></div>
+            <div class="text-center">
+                <p id="loader-text" class="text-white font-semibold">Fetching macroeconomic data...</p>
+                <p class="text-xs text-slate-500 mt-1">Downloading stock prices, parsing Google News XML, and computing FinBERT AI weights.</p>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="border-b border-borderCol">
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                <button id="tab-overview-btn" class="border-b-2 border-accentCyan text-white px-1 py-3 text-sm font-bold flex items-center gap-1.5 transition">
+                    📊 Market Overview
+                </button>
+                <button id="tab-pro-btn" class="border-b-2 border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-500 px-1 py-3 text-sm font-bold flex items-center gap-1.5 transition">
+                    ⚡ Pro Quant Terminal
+                </button>
+            </nav>
+        </div>
+
+        <!-- Pro Quant Terminal Tab Content (Initially Hidden) -->
+        <div id="tab-pro-content" class="hidden space-y-6">
+            <!-- Pro Quant Cards Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Sharpe Ratio Card -->
+                <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between min-h-[90px]">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Annualized Sharpe Ratio</span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span id="sharpe-card-value" class="text-2xl font-bold text-white">-</span>
+                        <span class="text-xs text-slate-400">Risk-Free Rate: 4.0%</span>
+                    </div>
+                </div>
+                <!-- Beta Card -->
+                <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between min-h-[90px]">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Systematic Risk (Market Beta)</span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span id="beta-card-value" class="text-2xl font-bold text-white">-</span>
+                        <span id="beta-card-label" class="text-xs text-slate-400">vs Benchmark</span>
+                    </div>
+                </div>
+                <!-- Strategy Final Return Card -->
+                <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between min-h-[90px]">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sentiment Strategy Return</span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span id="strat-card-value" class="text-2xl font-bold text-white">-</span>
+                        <span id="strat-card-bh" class="text-xs text-slate-400">Buy & Hold: -</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Quant Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Lead-Lag Cross-Correlation -->
+                <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl">
+                    <h3 class="text-md font-semibold text-slate-300 mb-4 flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-accentCyan"></span> News Sentiment Lead-Lag Analysis
+                    </h3>
+                    <div id="plotly-lead-lag" class="w-full min-h-[350px]">
+                        <div class="h-[350px] flex items-center justify-center text-slate-500 border border-dashed border-borderCol rounded-lg">
+                            Run an analysis to view Lead-Lag Cross-Correlation.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Study Impulse Response -->
+                <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl">
+                    <h3 class="text-md font-semibold text-slate-300 mb-4 flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span> News Event Study (Average Return Trajectory)
+                    </h3>
+                    <div id="plotly-event-study" class="w-full min-h-[350px]">
+                        <div class="h-[350px] flex items-center justify-center text-slate-500 border border-dashed border-borderCol rounded-lg">
+                            Run an analysis to view news impact trajectory.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy Simulation Equity Curve -->
+            <div class="bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl">
+                <h3 class="text-md font-semibold text-slate-300 mb-4 flex items-center gap-1.5">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Sentiment Strategy Backtest Simulation
+                </h3>
+                <div id="plotly-backtest" class="w-full min-h-[400px]">
+                    <div class="h-[400px] flex items-center justify-center text-slate-500 border border-dashed border-borderCol rounded-lg">
+                        Run an analysis to simulate trading strategy performance.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Body: Split View (Plotly Chart & News Feed) -->
+        <div id="content-layout" class="grid grid-cols-1 lg:grid-cols-10 gap-6">
+            <!-- Left Side: Plotly Chart (70% width) -->
+            <div class="lg:col-span-7 bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-md font-semibold text-slate-300 flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-accentCyan"></span> Price Action & Sentiment Overlay
+                    </h3>
+                    <button id="export-prices-btn" class="hidden text-[10px] md:text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-1 px-2.5 border border-borderCol rounded transition">
+                        📥 Export Prices (CSV)
+                    </button>
+                </div>
+                <div id="plotly-chart" class="w-full min-h-[450px]">
+                    <!-- Placeholder text before user submits -->
+                    <div class="h-[450px] flex items-center justify-center text-slate-500 border border-dashed border-borderCol rounded-lg">
+                        Enter details and click 'Generate Analysis' to render chart.
+                    </div>
+                </div>
+                <!-- Correlation Matrix Sub-Panel -->
+                <div id="correlation-container" class="hidden mt-6 border-t border-borderCol pt-4">
+                    <h4 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-1.5">
+                        <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span> Daily Return Correlation Matrix (Pearson)
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table id="correlation-table" class="w-full text-left border-collapse text-xs text-slate-400">
+                            <!-- Dynamically populated -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Scrollable News Feed (30% width) -->
+            <div class="lg:col-span-3 bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-md font-semibold text-slate-300 flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-accentCyan"></span> Contextual News Feed
+                    </h3>
+                    <button id="export-news-btn" class="hidden text-[10px] md:text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-1 px-2.5 border border-borderCol rounded transition">
+                        📥 Export News (CSV)
+                    </button>
+                </div>
+                <!-- Scrollable Container -->
+                <div id="news-feed-list" class="flex-1 overflow-y-auto max-h-[450px] pr-2 space-y-3 custom-scrollbar">
+                    <!-- Placeholder -->
+                    <div class="text-center text-slate-500 py-12 border border-dashed border-borderCol rounded-lg h-full flex flex-col justify-center items-center">
+                        <p class="text-sm">No breaking stories loaded</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script Operations -->
+    <script>
+        // Global variables for CSV Export
+        let lastFetchedPriceData = [];
+        let lastFetchedNewsData = [];
+        let lastFetchedTicker = "";
+        let lastFetchedKeyword = "";
+        // Asset Presets Configuration
+        const assetPresets = {
+            stocks: [
+                { name: "Apple Inc. (US)", symbol: "AAPL" },
+                { name: "Microsoft Corp. (US)", symbol: "MSFT" },
+                { name: "NVIDIA Corporation (US)", symbol: "NVDA" },
+                { name: "Alphabet Inc. (US)", symbol: "GOOGL" },
+                { name: "Amazon.com Inc. (US)", symbol: "AMZN" },
+                { name: "Meta Platforms (US)", symbol: "META" },
+                { name: "Tesla Inc. (US)", symbol: "TSLA" },
+                { name: "Berkshire Hathaway (US)", symbol: "BRK-B" },
+                { name: "TSMC ADR (Taiwan)", symbol: "TSM" },
+                { name: "ASML Holding ADR (Euro)", symbol: "ASML" },
+                { name: "Alibaba Group ADR (China)", symbol: "BABA" },
+                { name: "Reliance Industries (India)", symbol: "RELIANCE.NS" }
+            ],
+            crypto: [
+                { name: "Bitcoin (BTC)", symbol: "BTC-USD" },
+                { name: "Ethereum (ETH)", symbol: "ETH-USD" },
+                { name: "Binance Coin (BNB)", symbol: "BNB-USD" },
+                { name: "Solana (SOL)", symbol: "SOL-USD" },
+                { name: "Ripple (XRP)", symbol: "XRP-USD" },
+                { name: "Cardano (ADA)", symbol: "ADA-USD" },
+                { name: "Dogecoin (DOGE)", symbol: "DOGE-USD" },
+                { name: "Shiba Inu (SHIB)", symbol: "SHIB-USD" },
+                { name: "Polkadot (DOT)", symbol: "DOT-USD" },
+                { name: "Polygon (MATIC)", symbol: "MATIC-USD" },
+                { name: "Avalanche (AVAX)", symbol: "AVAX-USD" },
+                { name: "Chainlink (LINK)", symbol: "LINK-USD" }
+            ],
+            indices: [
+                { name: "S&P 500 (US)", symbol: "^GSPC" },
+                { name: "NASDAQ Composite (US)", symbol: "^IXIC" },
+                { name: "Dow Jones Industrials (US)", symbol: "^DJI" },
+                { name: "Nifty 50 (India)", symbol: "^NSEI" },
+                { name: "BSE Sensex (India)", symbol: "^BSESN" },
+                { name: "FTSE 100 (UK)", symbol: "^FTSE" },
+                { name: "DAX Performance Index (Germany)", symbol: "^GDAXI" },
+                { name: "CAC 40 (France)", symbol: "^FCHI" },
+                { name: "Nikkei 225 (Japan)", symbol: "^N225" },
+                { name: "Hang Seng Index (Hong Kong)", symbol: "^HSI" },
+                { name: "Shanghai Composite (China)", symbol: "000001.SS" },
+                { name: "S&P/TSX Composite (Canada)", symbol: "^GSPTSE" }
+            ],
+            commodities: [
+                { name: "Brent Crude Oil Futures", symbol: "BZ=F" },
+                { name: "WTI Light Sweet Crude", symbol: "CL=F" },
+                { name: "Gold Futures", symbol: "GC=F" },
+                { name: "Silver Futures", symbol: "SI=F" },
+                { name: "Natural Gas Futures", symbol: "NG=F" },
+                { name: "Copper Futures", symbol: "HG=F" },
+                { name: "Corn Futures", symbol: "ZC=F" },
+                { name: "Wheat Futures", symbol: "ZW=F" },
+                { name: "Soybean Futures", symbol: "ZS=F" },
+                { name: "Sugar Futures", symbol: "SB=F" }
+            ],
+            forex: [
+                { name: "Euro / US Dollar", symbol: "EURUSD=X" },
+                { name: "US Dollar / Japanese Yen", symbol: "JPY=X" },
+                { name: "British Pound / US Dollar", symbol: "GBPUSD=X" },
+                { name: "Australian Dollar / US Dollar", symbol: "AUDUSD=X" },
+                { name: "US Dollar / Canadian Dollar", symbol: "CAD=X" },
+                { name: "US Dollar / Swiss Franc", symbol: "CHF=X" },
+                { name: "US Dollar / Indian Rupee", symbol: "INR=X" },
+                { name: "Euro / British Pound", symbol: "EURGBP=X" }
+            ],
+            comparison: [
+                { name: "Global Macro Benchmark (S&P500, Gold, Crude, BTC, EURUSD)", symbol: "^GSPC,GC=F,BZ=F,BTC-USD,EURUSD=X" },
+                { name: "Magnificent Seven Stocks (AAPL, MSFT, NVDA, GOOGL, AMZN, META, TSLA)", symbol: "AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA" },
+                { name: "Top Cryptocurrencies (BTC, ETH, SOL, BNB, XRP)", symbol: "BTC-USD,ETH-USD,SOL-USD,BNB-USD,XRP-USD" },
+                { name: "Energy & Precious Metals (Brent, WTI, Gold, Silver, Gas)", symbol: "BZ=F,CL=F,GC=F,SI=F,NG=F" },
+                { name: "Major World Indices (S&P500, NASDAQ, FTSE, DAX, Nikkei, Nifty)", symbol: "^GSPC,^IXIC,^FTSE,^GDAXI,^N225,^NSEI" },
+                { name: "Major Currencies (EURUSD, USDJPY, GBPUSD, AUDUSD, USDCAD)", symbol: "EURUSD=X,JPY=X,GBPUSD=X,AUDUSD=X,CAD=X" }
+            ]
+        };
+        const categoryDropdown = document.getElementById('asset-category');
+        const tickerSelectContainer = document.getElementById('ticker-select-container');
+        const tickerSelectDropdown = document.getElementById('ticker-select');
+        const tickerCustomContainer = document.getElementById('ticker-custom-container');
+        const tickerCustomInput = document.getElementById('ticker-custom');
+
+        function updateTickerSelector() {
+            const selectedCategory = categoryDropdown.value;
+            
+            if (selectedCategory === 'custom') {
+                tickerSelectContainer.classList.add('hidden');
+                tickerCustomContainer.classList.remove('hidden');
+                tickerCustomInput.required = true;
+            } else {
+                tickerSelectContainer.classList.remove('hidden');
+                tickerCustomContainer.classList.add('hidden');
+                tickerCustomInput.required = false;
+                
+                // Populate options
+                const presets = assetPresets[selectedCategory] || [];
+                tickerSelectDropdown.innerHTML = presets.map(p => 
+                    `<option value="${p.symbol}">${p.name} (${p.symbol})</option>`
+                ).join('');
+            }
+        }
+
+        categoryDropdown.addEventListener('change', updateTickerSelector);
+        
+        // Initial invocation
+        updateTickerSelector();
+
+        // Set default date range to last 60 days
+        const today = new Date();
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(today.getDate() - 60);
+
+        document.getElementById('startDate').value = sixtyDaysAgo.toISOString().split('T')[0];
+        document.getElementById('endDate').value = today.toISOString().split('T')[0];
+
+        // Form Submit listener
+        document.getElementById('analyze-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            let ticker = "";
+            const category = categoryDropdown.value;
+            if (category === 'custom') {
+                ticker = tickerCustomInput.value.trim().toUpperCase();
+                if (!ticker) {
+                    alert("Please enter a custom ticker symbol.");
+                    return;
+                }
+            } else {
+                ticker = tickerSelectDropdown.value;
+            }
+            
+            const keyword = document.getElementById('keyword').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // Show loader and hide content template partially
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('content-layout').classList.add('opacity-40');
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('submit-btn').innerText = "Loading Model & Feed...";
+
+            try {
+                // Fetch endpoint POST
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ticker: ticker,
+                        keyword: keyword,
+                        start_date: startDate,
+                        end_date: endDate
+                    })
+                });
+
+                const resData = await response.json();
+
+                if (!response.ok) {
+                    alert(resData.error || "An error occurred during calculation.");
+                    return;
+                }
+
+                // Update Status Bar
+                const statusPill = document.getElementById('engine-status');
+                statusPill.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Engine: ${resData.engine_active}`;
+                // Store fetched data globally for exports
+                lastFetchedNewsData = resData.news_data;
+                lastFetchedTicker = ticker;
+                lastFetchedKeyword = keyword;
+
+                // Make CSV Export buttons visible
+                document.getElementById('export-news-btn').classList.remove('hidden');
+
+                const newsData = resData.news_data;
+                
+                if (resData.is_comparison) {
+                    // Store comparison data globally (specifically the price_comparison object)
+                    lastFetchedPriceData = resData.price_comparison; 
+                    document.getElementById('export-prices-btn').classList.remove('hidden');
+
+                    // Compute comparison performance range
+                    const validTickers = resData.valid_tickers;
+                    const perfMetrics = resData.performance_metrics;
+                    const volatilities = resData.volatilities;
+                    const drawdowns = resData.max_drawdowns;
+
+                    let topTicker = validTickers[0];
+                    let bottomTicker = validTickers[0];
+                    let minVol = volatilities[validTickers[0]];
+                    let maxVol = volatilities[validTickers[0]];
+                    let maxDD = drawdowns[validTickers[0]];
+
+                    validTickers.forEach(t => {
+                        if (perfMetrics[t] > perfMetrics[topTicker]) topTicker = t;
+                        if (perfMetrics[t] < perfMetrics[bottomTicker]) bottomTicker = t;
+                        if (volatilities[t] < minVol) minVol = volatilities[t];
+                        if (volatilities[t] > maxVol) maxVol = volatilities[t];
+                        if (drawdowns[t] < maxDD) maxDD = drawdowns[t]; // drawing down is negative, so min is deepest
+                    });
+
+                    // Update Metrics Card 1: Asset Performance
+                    document.getElementById('price-card-value').innerText = "Comparison Active";
+                    const deltaLabel = document.getElementById('price-card-delta');
+                    deltaLabel.innerText = `Top: ${topTicker} (+${perfMetrics[topTicker].toFixed(1)}%) | Bot: ${bottomTicker} (${perfMetrics[bottomTicker].toFixed(1)}%)`;
+                    deltaLabel.className = "text-[10px] font-bold text-sky-400";
+
+                    // Update Metrics Card 2: Volatility Range
+                    document.getElementById('volatility-card-value').innerText = `${minVol.toFixed(1)}% - ${maxVol.toFixed(1)}%`;
+
+                    // Update Metrics Card 3: Max Drawdown (Deepest)
+                    document.getElementById('drawdown-card-value').innerText = `${maxDD.toFixed(1)}%`;
+
+                    // Hide/Show Correlation Matrix Table
+                    const correlationContainer = document.getElementById('correlation-container');
+                    const correlationTable = document.getElementById('correlation-table');
+                    
+                    if (resData.correlation_matrix && Object.keys(resData.correlation_matrix).length > 1) {
+                        correlationContainer.classList.remove('hidden');
+                        
+                        // Populate Table
+                        const matrix = resData.correlation_matrix;
+                        const mTickers = Object.keys(matrix);
+                        
+                        let tableHtml = "<thead><tr><th class='p-2 border border-borderCol bg-slate-900 text-slate-300 font-bold'>Asset</th>";
+                        mTickers.forEach(t => {
+                            tableHtml += `<th class='p-2 border border-borderCol bg-slate-900 text-slate-300 font-bold text-center'>${t}</th>`;
+                        });
+                        tableHtml += "</tr></thead><tbody>";
+                        
+                        mTickers.forEach(rowTicker => {
+                            tableHtml += `<tr><td class='p-2 border border-borderCol font-semibold text-slate-300'>${rowTicker}</td>`;
+                            mTickers.forEach(colTicker => {
+                                const val = matrix[rowTicker][colTicker];
+                                const formattedVal = val !== null && val !== undefined ? val.toFixed(2) : '-';
+                                // Dynamic background colors based on correlation strength
+                                let cellStyle = "text-center p-2 border border-borderCol";
+                                if (val !== null && val !== undefined) {
+                                    if (val > 0.7) cellStyle += " bg-emerald-950/40 text-emerald-400";
+                                    else if (val < -0.3) cellStyle += " bg-rose-950/40 text-rose-400";
+                                    else cellStyle += " text-slate-400";
+                                }
+                                tableHtml += `<td class='${cellStyle}'>${formattedVal}</td>`;
+                            });
+                            tableHtml += "</tr>";
+                        });
+                        tableHtml += "</tbody>";
+                        correlationTable.innerHTML = tableHtml;
+                    } else {
+                        correlationContainer.classList.add('hidden');
+                    }
+
+                    // Render Chart (Multi-comparison Mode)
+                    renderPlotlyChartComparison(resData);
+
+                    if (resData.pro_metrics) {
+                        renderProQuantTerminal(resData.pro_metrics, true, resData.primary_ticker);
+                    }
+
+                } else {
+                    // Single Asset Mode
+                    lastFetchedPriceData = resData.price_data;
+                    document.getElementById('export-prices-btn').classList.remove('hidden');
+                    document.getElementById('correlation-container').classList.add('hidden');
+
+                    const priceData = resData.price_data;
+                    const lastPriceObj = priceData[priceData.length - 1];
+                    const perfVal = resData.performance_metric;
+                    
+                    document.getElementById('price-card-value').innerText = `$${lastPriceObj.price.toFixed(2)}`;
+                    const deltaLabel = document.getElementById('price-card-delta');
+                    deltaLabel.innerText = `${perfVal >= 0 ? '+' : ''}${perfVal.toFixed(2)}%`;
+                    if (perfVal >= 0) {
+                        deltaLabel.className = "text-sm font-bold text-bullishGreen";
+                    } else {
+                        deltaLabel.className = "text-sm font-bold text-bearishRed";
+                    }
+
+                    // Update Metrics Card 2: Volatility (Std Dev)
+                    const volatilityVal = resData.volatility;
+                    document.getElementById('volatility-card-value').innerText = `${volatilityVal.toFixed(2)}%`;
+
+                    // Update Metrics Card 3: Max Drawdown
+                    const drawdownVal = resData.max_drawdown;
+                    document.getElementById('drawdown-card-value').innerText = `${drawdownVal.toFixed(2)}%`;
+
+                    // Render Chart (Standard Mode)
+                    renderPlotlyChart(ticker, priceData, newsData);
+
+                    if (resData.pro_metrics) {
+                        renderProQuantTerminal(resData.pro_metrics, false, ticker);
+                    }
+                }
+
+                // Update Metrics Card 4: News Volume
+                document.getElementById('news-card-volume').innerText = `${newsData.length} articles`;
+                document.getElementById('news-card-topic').innerText = `Topic: "${keyword}"`;
+
+                // Update Metrics Card 5: Aggregate Sentiment Index
+                const sentimentCardValue = document.getElementById('sentiment-card-value');
+                const sentimentCardScore = document.getElementById('sentiment-card-score');
+                
+                if (newsData.length > 0) {
+                    const totalScore = newsData.reduce((acc, curr) => acc + curr['Sentiment Score'], 0);
+                    const avgScore = totalScore / newsData.length;
+                    
+                    let sentLabel = "Neutral";
+                    let sentColor = "text-neutralGray";
+                    if (avgScore > 0.15) {
+                        sentLabel = "Bullish";
+                        sentColor = "text-bullishGreen";
+                    } else if (avgScore < -0.15) {
+                        sentLabel = "Bearish";
+                        sentColor = "text-bearishRed";
+                    }
+                    
+                    sentimentCardValue.innerText = sentLabel;
+                    sentimentCardValue.className = `text-2xl font-bold ${sentColor}`;
+                    sentimentCardScore.innerText = `Index: ${avgScore.toFixed(2)}`;
+                    sentimentCardScore.className = `text-sm font-bold ${sentColor}`;
+                } else {
+                    sentimentCardValue.innerText = "No Data";
+                    sentimentCardValue.className = "text-2xl font-bold text-neutralGray";
+                    sentimentCardScore.innerText = "-";
+                    sentimentCardScore.className = "text-sm font-bold text-neutralGray";
+                }
+
+                // Populate News List Feed
+                renderNewsFeed(newsData);
+            } catch (err) {
+                console.error(err);
+                alert("Failed to connect to the backend server. Make sure the server is running.");
+            } finally {
+                // Hide loader
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('content-layout').classList.remove('opacity-40');
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('submit-btn').innerText = "Generate Analysis";
+            }
+        });
+
+        // Plotly Chart Render Logic
+        function renderPlotlyChart(ticker, priceData, newsData) {
+            const dates = priceData.map(p => p.date);
+            const prices = priceData.map(p => p.price);
+            const smaPrices = priceData.map(p => p.sma);
+            const volumes = priceData.map(p => p.volume);
+
+            // Asset Price Line Trace (Yaxis 1)
+            const priceTrace = {
+                x: dates,
+                y: prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: `${ticker} Close`,
+                yaxis: 'y',
+                line: {
+                    color: '#00F3FF',
+                    width: 2.5
+                },
+                hovertemplate: '<b>Date</b>: %{x}<br><b>Price</b>: $%{y:.2f}<extra></extra>'
+            };
+
+            // 20-Day SMA Line Trace (Yaxis 1)
+            const smaTrace = {
+                x: dates,
+                y: smaPrices,
+                type: 'scatter',
+                mode: 'lines',
+                name: '20-Day SMA',
+                yaxis: 'y',
+                line: {
+                    color: '#FFAB00',
+                    width: 1.5,
+                    dash: 'dash'
+                },
+                hovertemplate: '<b>Date</b>: %{x}<br><b>20-Day SMA</b>: $%{y:.2f}<extra></extra>'
+            };
+
+            // Group news events by sentiment
+            const bullishNews = newsData.filter(n => n['Sentiment Label'] === 'Bullish');
+            const bearishNews = newsData.filter(n => n['Sentiment Label'] === 'Bearish');
+            const neutralNews = newsData.filter(n => n['Sentiment Label'] === 'Neutral');
+
+            // Bullish Scatter markers (Yaxis 1)
+            const bullishTrace = {
+                x: bullishNews.map(n => n.MappedDate),
+                y: bullishNews.map(n => n.Price),
+                type: 'scatter',
+                mode: 'markers',
+                name: 'Bullish News',
+                yaxis: 'y',
+                marker: {
+                    color: '#00E676',
+                    symbol: 'triangle-up',
+                    size: 11,
+                    line: { color: '#ffffff', width: 1 }
+                },
+                customdata: bullishNews.map(n => [n.Headline, n.Source, n.Date]),
+                hovertemplate: 
+                    '<b>Headline</b>: %{customdata[0]}<br>' +
+                    '<b>Source</b>: %{customdata[1]} | %{customdata[2]}<br>' +
+                    '<b>Sentiment</b>: Bullish (+1.00)<extra></extra>'
+            };
+
+            // Bearish Scatter markers (Yaxis 1)
+            const bearishTrace = {
+                x: bearishNews.map(n => n.MappedDate),
+                y: bearishNews.map(n => n.Price),
+                type: 'scatter',
+                mode: 'markers',
+                name: 'Bearish News',
+                yaxis: 'y',
+                marker: {
+                    color: '#FF1744',
+                    symbol: 'triangle-down',
+                    size: 11,
+                    line: { color: '#ffffff', width: 1 }
+                },
+                customdata: bearishNews.map(n => [n.Headline, n.Source, n.Date]),
+                hovertemplate: 
+                    '<b>Headline</b>: %{customdata[0]}<br>' +
+                    '<b>Source</b>: %{customdata[1]} | %{customdata[2]}<br>' +
+                    '<b>Sentiment</b>: Bearish (-1.00)<extra></extra>'
+            };
+
+            // Neutral Scatter markers (Yaxis 1)
+            const neutralTrace = {
+                x: neutralNews.map(n => n.MappedDate),
+                y: neutralNews.map(n => n.Price),
+                type: 'scatter',
+                mode: 'markers',
+                name: 'Neutral News',
+                yaxis: 'y',
+                marker: {
+                    color: '#90A4AE',
+                    symbol: 'circle',
+                    size: 10,
+                    line: { color: '#ffffff', width: 1 }
+                },
+                customdata: neutralNews.map(n => [n.Headline, n.Source, n.Date]),
+                hovertemplate: 
+                    '<b>Headline</b>: %{customdata[0]}<br>' +
+                    '<b>Source</b>: %{customdata[1]} | %{customdata[2]}<br>' +
+                    '<b>Sentiment</b>: Neutral (0.00)<extra></extra>'
+            };
+
+            // Trading Volume Subplot (Yaxis 2 - Bar Chart)
+            const volumeColors = priceData.map((p, idx) => {
+                if (idx === 0) return 'rgba(0, 230, 118, 0.3)'; // Default bullish green
+                const prevPrice = priceData[idx - 1].price;
+                return p.price >= prevPrice ? 'rgba(0, 230, 118, 0.3)' : 'rgba(255, 23, 68, 0.3)';
+            });
+
+            const volumeTrace = {
+                x: dates,
+                y: volumes,
+                type: 'bar',
+                name: 'Volume',
+                yaxis: 'y2',
+                marker: {
+                    color: volumeColors
+                },
+                hovertemplate: '<b>Date</b>: %{x}<br><b>Volume</b>: %{y:,.0f}<extra></extra>'
+            };
+
+            const data = [priceTrace, smaTrace, bullishTrace, bearishTrace, neutralTrace, volumeTrace];
+
+            const layout = {
+                paper_bgcolor: '#0D1117',
+                plot_bgcolor: '#0D1117',
+                margin: { l: 60, r: 20, t: 20, b: 40 },
+                hovermode: 'closest',
+                xaxis: {
+                    gridcolor: '#21262D',
+                    linecolor: '#30363D',
+                    title: { text: 'Date', font: { color: '#8B949E', size: 11 } },
+                    tickfont: { color: '#8B949E' }
+                },
+                yaxis: {
+                    gridcolor: '#21262D',
+                    linecolor: '#30363D',
+                    title: { text: 'Price ($)', font: { color: '#8B949E', size: 11 } },
+                    tickfont: { color: '#8B949E' },
+                    tickprefix: '$',
+                    domain: [0.33, 1.0]
+                },
+                yaxis2: {
+                    gridcolor: '#21262D',
+                    linecolor: '#30363D',
+                    title: { text: 'Volume', font: { color: '#8B949E', size: 11 } },
+                    tickfont: { color: '#8B949E' },
+                    domain: [0.0, 0.23]
+                },
+                legend: {
+                    orientation: 'h',
+                    x: 0,
+                    y: 1.1,
+                    font: { color: '#C9D1D9', size: 11 },
+                    bgcolor: 'rgba(10, 13, 20, 0.6)'
+                }
+            };
+
+            const config = { responsive: true, displayModeBar: false };
+
+            Plotly.newPlot('plotly-chart', data, layout, config);
+        }
+
+        // Plotly Chart Render Logic for Comparison Mode
+        function renderPlotlyChartComparison(resData) {
+            const priceComparison = resData.price_comparison;
+            const validTickers = resData.valid_tickers;
+            const newsData = resData.news_data;
+            const primaryTicker = resData.primary_ticker;
+            
+            const colorPalette = ['#00F3FF', '#FFD700', '#FF7F50', '#DA70D6', '#32CD32', '#FF69B4', '#87CEEB'];
+            const traces = [];
+            
+            // Map primary ticker's dates to rebased prices for news marker alignment
+            const primaryData = priceComparison[primaryTicker];
+            const primaryFirstPrice = primaryData[0].price;
+            const primaryRebasedMap = {};
+            primaryData.forEach(p => {
+                primaryRebasedMap[p.date] = (p.price / primaryFirstPrice) * 100;
+            });
+            
+            validTickers.forEach((ticker, idx) => {
+                const priceData = priceComparison[ticker];
+                const dates = priceData.map(p => p.date);
+                const firstPrice = priceData[0].price;
+                const rebasedPrices = priceData.map(p => (p.price / firstPrice) * 100);
+                
+                const color = colorPalette[idx % colorPalette.length];
+                
+                traces.push({
+                    x: dates,
+                    y: rebasedPrices,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: `${ticker} (Indexed)`,
+                    line: {
+                        color: color,
+                        width: 2.0
+                    },
+                    hovertemplate: `<b>Date</b>: %{x}<br><b>${ticker} Rebased</b>: %{y:.2f}%<extra></extra>`
+                });
+            });
+            
+            // Group news events by sentiment and plot them relative to the primary reference asset's line
+            const bullishNews = newsData.filter(n => n['Sentiment Label'] === 'Bullish');
+            const bearishNews = newsData.filter(n => n['Sentiment Label'] === 'Bearish');
+            const neutralNews = newsData.filter(n => n['Sentiment Label'] === 'Neutral');
+            
+            const getNewsY = (n) => {
+                const val = primaryRebasedMap[n.MappedDate];
+                return val !== undefined ? val : 100;
+            };
+            
+            // Bullish news
+            traces.push({
+                x: bullishNews.map(n => n.MappedDate),
+                y: bullishNews.map(n => getNewsY(n)),
+                type: 'scatter',
+                mode: 'markers',
+                name: `Bullish News (${primaryTicker})`,
+                marker: {
+                    color: '#00E676',
+                    symbol: 'triangle-up',
+                    size: 11,
+                    line: { color: '#ffffff', width: 1 }
+                },
+                customdata: bullishNews.map(n => [n.Headline, n.Source, n.Date]),
+                hovertemplate: 
+                    '<b>Headline</b>: %{customdata[0]}<br>' +
+                    '<b>Source</b>: %{customdata[1]} | %{customdata[2]}<br>' +
+                    '<b>Sentiment</b>: Bullish (+1.00)<extra></extra>'
+            });
+            
+            // Bearish news
+            traces.push({
+                x: bearishNews.map(n => n.MappedDate),
+                y: bearishNews.map(n => getNewsY(n)),
+                type: 'scatter',
+                mode: 'markers',
+                name: `Bearish News (${primaryTicker})`,
+                marker: {
+                    color: '#FF1744',
+                    symbol: 'triangle-down',
+                    size: 11,
+                    line: { color: '#ffffff', width: 1 }
+                },
+                customdata: bearishNews.map(n => [n.Headline, n.Source, n.Date]),
+                hovertemplate: 
+                    '<b>Headline</b>: %{customdata[0]}<br>' +
+                    '<b>Source</b>: %{customdata[1]} | %{customdata[2]}<br>' +
+                    '<b>Sentiment</b>: Bearish (-1.00)<extra></extra>'
+            });
+            
+            // Neutral news
+            traces.push({
+                x: neutralNews.map(n => n.MappedDate),
+                y: neutralNews.map(n => getNewsY(n)),
+                type: 'scatter',
+                mode: 'markers',
+                name: `Neutral News (${primaryTicker})`,
+                marker: {
+                    color: '#90A4AE',
+                    symbol: 'circle',
+                    size: 10,
+                    line: { color: '#ffffff', width: 1 }
+                },
+                customdata: neutralNews.map(n => [n.Headline, n.Source, n.Date]),
+                hovertemplate: 
+                    '<b>Headline</b>: %{customdata[0]}<br>' +
+                    '<b>Source</b>: %{customdata[1]} | %{customdata[2]}<br>' +
+                    '<b>Sentiment</b>: Neutral (0.00)<extra></extra>'
+            });
+            
+            const layout = {
+                paper_bgcolor: '#0D1117',
+                plot_bgcolor: '#0D1117',
+                margin: { l: 60, r: 20, t: 20, b: 40 },
+                hovermode: 'closest',
+                xaxis: {
+                    gridcolor: '#21262D',
+                    linecolor: '#30363D',
+                    title: { text: 'Date', font: { color: '#8B949E', size: 11 } },
+                    tickfont: { color: '#8B949E' }
+                },
+                yaxis: {
+                    gridcolor: '#21262D',
+                    linecolor: '#30363D',
+                    title: { text: 'Indexed Value (Starts at 100)', font: { color: '#8B949E', size: 11 } },
+                    tickfont: { color: '#8B949E' },
+                    tickprefix: ''
+                },
+                legend: {
+                    orientation: 'h',
+                    x: 0,
+                    y: 1.1,
+                    font: { color: '#C9D1D9', size: 11 },
+                    bgcolor: 'rgba(10, 13, 20, 0.6)'
+                }
+            };
+            
+            const config = { responsive: true, displayModeBar: false };
+            Plotly.newPlot('plotly-chart', traces, layout, config);
+        }
+
+        // Tab switching logic
+        const tabOverviewBtn = document.getElementById('tab-overview-btn');
+        const tabProBtn = document.getElementById('tab-pro-btn');
+        const tabOverviewContent = document.getElementById('content-layout');
+        const tabProContent = document.getElementById('tab-pro-content');
+
+        tabOverviewBtn.addEventListener('click', () => {
+            tabOverviewBtn.classList.remove('border-transparent', 'text-slate-400');
+            tabOverviewBtn.classList.add('border-accentCyan', 'text-white');
+            tabProBtn.classList.remove('border-accentCyan', 'text-white');
+            tabProBtn.classList.add('border-transparent', 'text-slate-400');
+            
+            tabOverviewContent.classList.remove('hidden');
+            tabProContent.classList.add('hidden');
+            
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        tabProBtn.addEventListener('click', () => {
+            tabProBtn.classList.remove('border-transparent', 'text-slate-400');
+            tabProBtn.classList.add('border-accentCyan', 'text-white');
+            tabOverviewBtn.classList.remove('border-accentCyan', 'text-white');
+            tabOverviewBtn.classList.add('border-transparent', 'text-slate-400');
+            
+            tabProContent.classList.remove('hidden');
+            tabOverviewContent.classList.add('hidden');
+            
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        // Plotly Pro Quant Charts Render Logic
+        function renderProQuantTerminal(proMetrics, isComparison, primaryTicker) {
+            // Update Metric Cards
+            document.getElementById('sharpe-card-value').innerText = proMetrics.sharpe_ratio.toFixed(2);
+            
+            if (isComparison) {
+                document.getElementById('beta-card-value').innerText = "Comparative Betas";
+                document.getElementById('beta-card-label').innerText = Object.entries(proMetrics.betas)
+                    .map(([t, b]) => `${t}: ${b.toFixed(2)}`).join(' | ');
+                document.getElementById('beta-card-label').className = "text-[10px] font-bold text-sky-400 block truncate max-w-full";
+            } else {
+                document.getElementById('beta-card-value').innerText = proMetrics.beta.toFixed(2);
+                const benchSymbol = primaryTicker.includes('-USD') ? 'BTC-USD' : 'S&P 500';
+                document.getElementById('beta-card-label').innerText = `Beta vs ${benchSymbol}`;
+                document.getElementById('beta-card-label').className = "text-xs text-slate-400";
+            }
+            
+            const stratVal = proMetrics.final_strat_return;
+            const stratCard = document.getElementById('strat-card-value');
+            stratCard.innerText = `${stratVal >= 0 ? '+' : ''}${stratVal.toFixed(1)}%`;
+            if (stratVal >= 0) {
+                stratCard.className = "text-2xl font-bold text-emerald-400";
+            } else {
+                stratCard.className = "text-2xl font-bold text-rose-400";
+            }
+            
+            const bhVal = proMetrics.final_bh_return;
+            document.getElementById('strat-card-bh').innerText = `Buy & Hold Return: ${bhVal >= 0 ? '+' : ''}${bhVal.toFixed(1)}%`;
+
+            // 1. Lead-Lag Cross-Correlation Bar Chart
+            const leadLagData = proMetrics.lead_lag_correlations;
+            const xLags = leadLagData.map(d => `${d.lag > 0 ? '+' : ''}${d.lag}d`);
+            const yCorrs = leadLagData.map(d => d.correlation);
+            const barColors = yCorrs.map(v => v >= 0 ? 'rgba(0, 243, 255, 0.7)' : 'rgba(255, 23, 68, 0.7)');
+            
+            const leadLagTrace = {
+                x: xLags,
+                y: yCorrs,
+                type: 'bar',
+                marker: { color: barColors },
+                hovertemplate: '<b>Lag</b>: %{x}<br><b>Correlation</b>: %{y:.4f}<extra></extra>'
+            };
+            const leadLagLayout = {
+                paper_bgcolor: '#0D1117',
+                plot_bgcolor: '#0D1117',
+                margin: { l: 50, r: 15, t: 15, b: 35 },
+                hovermode: 'closest',
+                xaxis: { gridcolor: '#21262D', linecolor: '#30363D', tickfont: { color: '#8B949E' } },
+                yaxis: { gridcolor: '#21262D', linecolor: '#30363D', tickfont: { color: '#8B949E' } }
+            };
+            Plotly.newPlot('plotly-lead-lag', [leadLagTrace], leadLagLayout, { responsive: true, displayModeBar: false });
+
+            // 2. Event Study (Average Trajectories)
+            const bullPath = proMetrics.event_study_bullish;
+            const bearPath = proMetrics.event_study_bearish;
+            
+            const pValBullStr = proMetrics.p_value_bullish !== undefined ? ` (p=${proMetrics.p_value_bullish.toFixed(2)}${proMetrics.p_value_bullish < 0.05 ? '*' : ''})` : '';
+            const pValBearStr = proMetrics.p_value_bearish !== undefined ? ` (p=${proMetrics.p_value_bearish.toFixed(2)}${proMetrics.p_value_bearish < 0.05 ? '*' : ''})` : '';
+            
+            const bullTrace = {
+                x: bullPath.map(p => p.offset),
+                y: bullPath.map(p => p.return),
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: `Avg Bullish Event${pValBullStr}`,
+                line: { color: '#00E676', width: 2.0 },
+                marker: { size: 6, color: '#00E676' },
+                hovertemplate: '<b>Offset</b>: %{x}d<br><b>Avg Return</b>: %{y:.2f}%<extra></extra>'
+            };
+            const bearTrace = {
+                x: bearPath.map(p => p.offset),
+                y: bearPath.map(p => p.return),
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: `Avg Bearish Event${pValBearStr}`,
+                line: { color: '#FF1744', width: 2.0 },
+                marker: { size: 6, color: '#FF1744' },
+                hovertemplate: '<b>Offset</b>: %{x}d<br><b>Avg Return</b>: %{y:.2f}%<extra></extra>'
+            };
+            const studyLayout = {
+                paper_bgcolor: '#0D1117',
+                plot_bgcolor: '#0D1117',
+                margin: { l: 50, r: 15, t: 15, b: 35 },
+                hovermode: 'closest',
+                xaxis: { gridcolor: '#21262D', linecolor: '#30363D', tickfont: { color: '#8B949E' } },
+                yaxis: { gridcolor: '#21262D', linecolor: '#30363D', tickfont: { color: '#8B949E' }, ticksuffix: '%' },
+                legend: { orientation: 'h', x: 0, y: 1.15, font: { color: '#C9D1D9', size: 10 }, bgcolor: 'rgba(10, 13, 20, 0.6)' }
+            };
+            Plotly.newPlot('plotly-event-study', [bullTrace, bearTrace], studyLayout, { responsive: true, displayModeBar: false });
+
+            // 3. Backtest Simulation Equity Curve
+            const btData = proMetrics.backtest_data;
+            const btDates = btData.map(d => d.date);
+            const cumBH = btData.map(d => d.cum_bh);
+            const cumStrat = btData.map(d => d.cum_strat);
+            
+            const bhTrace = {
+                x: btDates,
+                y: cumBH,
+                type: 'scatter',
+                mode: 'lines',
+                name: `Buy & Hold (${primaryTicker})`,
+                line: { color: '#8B949E', width: 1.5, dash: 'dash' },
+                hovertemplate: '<b>Date</b>: %{x}<br><b>Buy & Hold</b>: %{y:.1f}%<extra></extra>'
+            };
+            const stratTrace = {
+                x: btDates,
+                y: cumStrat,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Sentiment Strategy (Lagged)',
+                line: { color: '#00F3FF', width: 2.5 },
+                hovertemplate: '<b>Date</b>: %{x}<br><b>Strategy</b>: %{y:.1f}%<extra></extra>'
+            };
+            const btLayout = {
+                paper_bgcolor: '#0D1117',
+                plot_bgcolor: '#0D1117',
+                margin: { l: 50, r: 15, t: 15, b: 35 },
+                hovermode: 'closest',
+                xaxis: { gridcolor: '#21262D', linecolor: '#30363D', tickfont: { color: '#8B949E' } },
+                yaxis: { gridcolor: '#21262D', linecolor: '#30363D', tickfont: { color: '#8B949E' } },
+                legend: { orientation: 'h', x: 0, y: 1.15, font: { color: '#C9D1D9', size: 10 }, bgcolor: 'rgba(10, 13, 20, 0.6)' }
+            };
+            Plotly.newPlot('plotly-backtest', [bhTrace, stratTrace], btLayout, { responsive: true, displayModeBar: false });
+        }
+
+        // Export Prices Click Listener
+        document.getElementById('export-prices-btn').addEventListener('click', function() {
+            if (!lastFetchedPriceData) return;
+            
+            let csvContent = "";
+            let filename = `${lastFetchedTicker}_price_history.csv`;
+            
+            if (Array.isArray(lastFetchedPriceData)) {
+                // Standard mode (single asset)
+                if (lastFetchedPriceData.length === 0) return;
+                const headers = ['Date', 'Close Price', 'SMA 20', 'Volume'];
+                const rows = lastFetchedPriceData.map(p => [
+                    p.date,
+                    p.price.toFixed(4),
+                    p.sma !== null && p.sma !== undefined ? p.sma.toFixed(4) : '',
+                    p.volume.toFixed(0)
+                ]);
+                csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            } else {
+                // Comparison mode (multiple assets)
+                const tickers = Object.keys(lastFetchedPriceData);
+                if (tickers.length === 0) return;
+                
+                const dateSet = new Set();
+                tickers.forEach(t => {
+                    lastFetchedPriceData[t].forEach(p => dateSet.add(p.date));
+                });
+                const sortedDates = Array.from(dateSet).sort();
+                
+                const headers = ['Date'];
+                tickers.forEach(t => {
+                    headers.push(`${t}_Raw_Close`);
+                    headers.push(`${t}_Indexed_Value`);
+                });
+                
+                const tickerDataMaps = {};
+                tickers.forEach(t => {
+                    tickerDataMaps[t] = {};
+                    if (lastFetchedPriceData[t].length > 0) {
+                        const firstPrice = lastFetchedPriceData[t][0].price;
+                        lastFetchedPriceData[t].forEach(p => {
+                            tickerDataMaps[t][p.date] = {
+                                raw: p.price,
+                                rebased: (p.price / firstPrice) * 100
+                            };
+                        });
+                    }
+                });
+                
+                const rows = sortedDates.map(date => {
+                    const row = [date];
+                    tickers.forEach(t => {
+                        const val = tickerDataMaps[t][date];
+                        if (val) {
+                            row.push(val.raw.toFixed(4));
+                            row.push(val.rebased.toFixed(4));
+                        } else {
+                            row.push('');
+                            row.push('');
+                        }
+                    });
+                    return row;
+                });
+                csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                filename = `${lastFetchedTicker.replace(/,/g, '_')}_comparison_indexed.csv`;
+            }
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Export News Click Listener
+        document.getElementById('export-news-btn').addEventListener('click', function() {
+            if (!lastFetchedNewsData || lastFetchedNewsData.length === 0) return;
+            const escapeCSV = (val) => {
+                if (val === null || val === undefined) return '';
+                let str = String(val);
+                str = str.replace(/"/g, '""');
+                if (str.includes(',') || str.includes('\n') || str.includes('\r') || str.includes('"')) {
+                    return `"${str}"`;
+                }
+                return str;
+            };
+            const headers = ['Date', 'Headline', 'Link', 'Sentiment Label', 'Sentiment Score', 'Asset Price', 'Mapped Date', 'Source', 'Summary'];
+            const rows = lastFetchedNewsData.map(n => [
+                escapeCSV(n.Date),
+                escapeCSV(n.Headline),
+                escapeCSV(n.Link),
+                escapeCSV(n['Sentiment Label']),
+                escapeCSV(n['Sentiment Score']),
+                escapeCSV(n.Price.toFixed(4)),
+                escapeCSV(n.MappedDate),
+                escapeCSV(n.Source),
+                escapeCSV(n.Summary)
+            ]);
+            const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `${lastFetchedTicker.replace(/,/g, '_')}_${lastFetchedKeyword.replace(/\s+/g, '_')}_news_sentiment.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        function renderNewsFeed(newsData) {
+            const feedContainer = document.getElementById('news-feed-list');
+            
+            if (newsData.length === 0) {
+                feedContainer.innerHTML = `
+                    <div class="text-center text-slate-500 py-12 border border-dashed border-borderCol rounded-lg h-full flex flex-col justify-center items-center">
+                        <p class="text-sm">No articles matched the keyword within the date range.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let feedHtml = "";
+
+            newsData.forEach(item => {
+                let badgeBg = "bg-slate-800 text-slate-300";
+                if (item['Sentiment Label'] === 'Bullish') {
+                    badgeBg = "bg-emerald-950 text-emerald-400 border border-emerald-500/25";
+                } else if (item['Sentiment Label'] === 'Bearish') {
+                    badgeBg = "bg-rose-950 text-rose-400 border border-rose-500/25";
+                }
+
+                feedHtml += `
+                    <div class="p-3 border-b border-borderCol/50 hover:bg-slate-900/50 rounded-lg transition duration-150">
+                        <div class="flex items-center justify-between mb-1.5 gap-2">
+                            <span class="text-[10px] text-slate-500 font-semibold tracking-wide">
+                                📅 ${item.Date} | ${item.Source}
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${badgeBg}">
+                                ${item['Sentiment Label']}
+                            </span>
+                        </div>
+                        <a href="${item.Link}" target="_blank" 
+                            class="text-xs font-semibold text-sky-400 hover:text-sky-300 hover:underline leading-relaxed block mb-1">
+                            ${item.Headline}
+                        </a>
+                        <p class="text-[11px] text-slate-400 leading-normal">
+                            ${item.Summary}
+                        </p>
+                    </div>
+                `;
+            });
+
+            feedContainer.innerHTML = feedHtml;
+        }
+    </script>
+</body>
+</html>
