@@ -155,6 +155,52 @@
                     </div>
                 </div>
 
+                <!-- Sortino Ratio -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Annualized Sortino Ratio</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> Similar to the Sharpe Ratio, the Sortino Ratio measures the strategy's risk-adjusted return, but it **only penalizes downside risk** (negative returns). It ignores positive volatility because price jumps represent profit runs, not capital danger.
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> The annualized strategy return ($R^{strat}_a = \bar{R}^{strat} \times N$) net of risk-free rate ($R_f = 4\%$) is divided by the annualized downside volatility ($\sigma_d = s_d \times \sqrt{N}$), which is the standard deviation computed strictly over negative excess returns:
+                    </p>
+                    <div class="bg-terminalBg/50 p-3 rounded text-center font-mono text-xs text-accentCyan">
+                        Sortino = (R<sup>strat</sup><sub>a</sub> - R<sub>f</sub>) / &sigma;<sub>d</sub> &nbsp;&bull;&nbsp; &sigma;<sub>d</sub> = Std(Min(0, R<sup>strat</sup><sub>daily</sub> - R<sub>f</sub>/N)) &times; &radic;N
+                    </div>
+                    <div class="text-[11px] text-slate-500 space-y-1">
+                        <p><strong>Sortino Scale Interpretation:</strong></p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li><span class="text-rose-400">&lt; 0.0:</span> Bad (underperformed treasury bills).</li>
+                            <li><span class="text-slate-300">0.0 - 1.0:</span> Standard risk-adjusted return profile.</li>
+                            <li><span class="text-sky-400">&gt; 1.0:</span> Good downside risk-adjusted return.</li>
+                            <li><span class="text-emerald-400">&gt; 2.0:</span> Excellent downside risk-adjusted efficiency.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Calmar Ratio -->
+                <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
+                    <h3 class="font-bold text-slate-200 text-base">Strategy Calmar Ratio</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>What it is:</strong> The Calmar Ratio evaluates the strategy's return relative to its worst drawdown risk. It measures the relationship between potential reward and worst-case scenario pain.
+                    </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong>The Math:</strong> The annualized strategy return ($R^{strat}_a$) divided by the absolute maximum strategy peak-to-trough drawdown ($MDD^{strat}$):
+                    </p>
+                    <div class="bg-terminalBg/50 p-3 rounded text-center font-mono text-xs text-accentCyan">
+                        Calmar = R<sup>strat</sup><sub>a</sub> / MDD<sup>strat</sup>
+                    </div>
+                    <div class="text-[11px] text-slate-500 space-y-1">
+                        <p><strong>Calmar Scale Interpretation:</strong></p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li><span class="text-rose-400">&lt; 0.0:</span> Strategy lost money over the period.</li>
+                            <li><span class="text-slate-300">0.0 - 1.0:</span> Suboptimal return relative to drawdown size.</li>
+                            <li><span class="text-sky-400">&gt; 1.0:</span> Good (annual return exceeds worst drawdown drop).</li>
+                            <li><span class="text-emerald-400">&gt; 2.0:</span> Outstanding risk efficiency (highly sought after by macro hedge funds).</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <!-- Market Beta -->
                 <div class="border-l-2 border-accentCyan pl-4 py-1 space-y-2">
                     <h3 class="font-bold text-slate-200 text-base">Systematic Risk (Market Beta)</h3>

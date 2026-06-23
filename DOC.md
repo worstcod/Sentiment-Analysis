@@ -236,6 +236,47 @@ Where:
 
 ---
 
+### A1. Annualized Sortino Ratio
+The Sortino Ratio measures the strategy's risk-adjusted return relative to **downside deviation** (penalizing only negative price movements).
+
+#### 1. Mathematical Formulation
+$$\text{Sortino Ratio} = \frac{R^{strat}_a - R_f}{\sigma_d}$$
+
+Where:
+- $R^{strat}_a$ is the annualized strategy return:
+  $$R^{strat}_a = \bar{R}^{strat}_{\text{daily}} \times N$$
+- $R_f$ is the annualized risk-free rate ($0.04$).
+- $\sigma_d$ is the annualized downside volatility, calculated as the sample standard deviation of daily strategy returns ($R^{strat}_t$) clipped at a maximum of the daily risk-free rate ($R_f / N$):
+  $$\sigma_d = \sqrt{\text{Variance}\left( \min\left(0, R^{strat}_t - \frac{R_f}{N}\right) \right) \times N}$$
+- $N$ is the standard session count: $365$ for Cryptocurrencies, $260$ for Forex, and $252$ for Stocks/Commodities.
+
+#### 2. Interpretation Guide
+- **$\text{Sortino} < 0.0$:** Suboptimal. Underperformed safe treasury yields.
+- **$0.0 \le \text{Sortino} < 1.0$:** Standard risk profile.
+- **$\text{Sortino} \ge 1.0$:** Good downside risk-adjusted return.
+- **$\text{Sortino} \ge 2.0$:** Excellent downside protection and return efficiency.
+
+---
+
+### A2. Strategy Calmar Ratio
+The Calmar Ratio evaluates the strategy's return relative to its worst historical peak-to-trough drawdown risk.
+
+#### 1. Mathematical Formulation
+$$\text{Calmar Ratio} = \frac{R^{strat}_a}{MDD^{strat}}$$
+
+Where:
+- $R^{strat}_a$ is the annualized strategy return.
+- $MDD^{strat}$ is the absolute maximum strategy peak-to-trough drawdown calculated from the compounding strategy equity curve:
+  $$MDD^{strat} = \max_t \left( \frac{\max_{\tau \le t} \text{Equity}(\tau) - \text{Equity}(t)}{\max_{\tau \le t} \text{Equity}(\tau)} \right)$$
+
+#### 2. Interpretation Guide
+- **$\text{Calmar} < 0.0$:** Negative strategy return.
+- **$0.0 \le \text{Calmar} < 1.0$:** Low return relative to worst-case historical drops.
+- **$\text{Calmar} \ge 1.0$:** Good return-to-drawdown efficiency.
+- **$\text{Calmar} \ge 2.0$:** Outstanding risk-adjusted reward profile.
+
+---
+
 ### B. Systematic Risk (Market Beta) & Market Alpha
 Beta ($\beta$) and Alpha ($\alpha$) measure an asset's risk and return profile relative to a market benchmark index. Beta represents systematic sensitivity to market-wide price swings, while Alpha represents the asset's idiosyncratic average excess return.
 
@@ -366,8 +407,7 @@ The user interface segregates visualizations and analytics into two distinct wor
    - **Correlation Matrix:** (Visible in comparison mode) Displays returns correlation coefficients.
 
 2. **⚡ Pro Quant Terminal Tab:**
-   - **Metrics Cards:** Displays the **Annualized Sharpe Ratio** (risk-adjusted return vs. $4\%$ risk-free rate), the **Systematic Beta** (risk sensitivity relative to benchmarks or primary ticker), and the **Backtest Net Return** compared to standard Buy & Hold.
+   - **Metrics Cards:** Displays the **Annualized Sharpe Ratio** (risk-adjusted return), **Annualized Sortino Ratio** (downside risk-adjusted return), **Strategy Calmar Ratio** (return relative to drawdown), the **Systematic Beta** (risk sensitivity relative to benchmarks or primary ticker), and the **Backtest Net Return** compared to standard Buy & Hold.
    - **Lead-Lag Analysis Chart:** Plots the cross-correlation bars for shifts $t-3$ to $t+3$.
    - **Event Study Chart:** Plots average abnormal return paths, displaying the calculated p-values and significance flags in the legend.
    - **Backtest Simulator Chart:** Plots the strategy equity growth curve vs. the benchmark buy-and-hold index.
-

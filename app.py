@@ -318,9 +318,33 @@ def compute_pro_metrics(price_series_full, news_payload, ticker, start_date_str,
     final_bh = float(strategy_df['cum_bh'].iloc[-1]) - 100.0 if not strategy_df.empty else 0.0
     final_strat = float(strategy_df['cum_strat'].iloc[-1]) - 100.0 if not strategy_df.empty else 0.0
     
+    # Calculate Sortino and Calmar Ratios
+    sortino = 0.0
+    calmar = 0.0
+    if not strategy_df.empty and len(strategy_df) > 1:
+        mean_strat = strategy_df['strat_returns'].mean()
+        ann_strat_return = mean_strat * ann_factor
+        
+        # 1. Sortino Ratio (Downside deviation relative to risk free rate)
+        downside_diff = strategy_df['strat_returns'] - (0.04 / ann_factor)
+        downside_diff = downside_diff.clip(upper=0.0)
+        downside_std = downside_diff.std(ddof=1)
+        downside_vol_ann = downside_std * (ann_factor ** 0.5)
+        if downside_vol_ann > 0:
+            sortino = float((ann_strat_return - 0.04) / downside_vol_ann)
+            
+        # 2. Calmar Ratio (Annualized return relative to maximum drawdown)
+        rolling_peak = strategy_df['cum_strat'].cummax()
+        strat_dd = (strategy_df['cum_strat'] - rolling_peak) / rolling_peak
+        max_strat_dd = float(abs(strat_dd.min()))
+        if max_strat_dd > 0:
+            calmar = float(ann_strat_return / max_strat_dd)
+            
     return {
         'sharpe_ratio': sharpe,
         'beta': beta,
+        'sortino_ratio': sortino,
+        'calmar_ratio': calmar,
         'lead_lag_correlations': lead_lag_corrs,
         'event_study_bullish': avg_bullish_path,
         'event_study_bearish': avg_bearish_path,
