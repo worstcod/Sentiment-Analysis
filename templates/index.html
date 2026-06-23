@@ -478,19 +478,9 @@
             tickerSelectDropdown.innerHTML = presets.map(p => 
                 `<option value="${p.symbol}">${p.name} (${p.symbol})</option>`
             ).join('');
-            
-            // Set input value to the default selected preset on class change
-            if (presets.length > 0) {
-                tickerCustomInput.value = presets[0].symbol;
-            }
         }
 
         categoryDropdown.addEventListener('change', updateTickerSelector);
-        
-        // Populate custom input when user clicks on a single preset option in the select dropdown
-        tickerSelectDropdown.addEventListener('change', () => {
-            tickerCustomInput.value = tickerSelectDropdown.value;
-        });
 
         // Add selected preset ticker to custom list (allowing multi-asset building)
         document.getElementById('add-ticker-btn').addEventListener('click', () => {
@@ -519,8 +509,9 @@
             tickerCustomInput.focus();
         });
 
-        // Initial invocation
+        // Initial invocation & load default ticker
         updateTickerSelector();
+        tickerCustomInput.value = "AAPL";
 
         // Set default date range to last 60 days
         const today = new Date();
