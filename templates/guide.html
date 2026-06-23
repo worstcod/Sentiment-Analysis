@@ -324,21 +324,39 @@
         <!-- Section 3: Visual Guide & Legend -->
         <section class="bg-cardBg border border-borderCol rounded-xl p-6 shadow-xl space-y-4">
             <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <span class="text-accentCyan">3.</span> Dashboard Workspace Tabs & Legend
+                <span class="text-accentCyan">3.</span> Dashboard Workspace Tabs & User Operations
             </h2>
             <p class="text-xs text-slate-400 leading-relaxed">
                 The terminal separates core visualizations and advanced quantitative calculations into two dedicated workspaces:
             </p>
             <div class="bg-terminalBg/50 p-4 rounded text-xs border border-borderCol/50 space-y-3">
                 <p class="text-slate-300">
-                    <strong>1. 📊 Market Overview Tab:</strong> Loads the core asset price overlay chart, the 20-day Simple Moving Average (dashed gold line), news sentiment triangles (green for bullish, red for bearish, gray for neutral), trading volume subplot (buying volume in green, selling volume in red), the full contextual news list, and the daily returns correlation matrix in comparison mode.
+                    <strong>1. 📊 Market Overview Tab:</strong> Loads the core asset price overlay chart, the 20-day Simple Moving Average (dashed gold line), news sentiment triangles (green for bullish, red for bearish, gray for neutral), trading volume subplot, the full contextual news list, and the daily returns correlation matrix in comparison mode. Use the toolbar on this chart to filter news markers by sentiment, zoom in/out, or maximize to full screen.
                 </p>
                 <p class="text-slate-300">
-                    <strong>2. ⚡ Pro Quant Terminal Tab:</strong> Loads risk-adjusted quantitative metrics cards (Sharpe Ratio, Market Beta, and cumulative strategy return percentage) along with three advanced Plotly charts (Lead-Lag correlation bar chart, Event Study trajectory lines, and the Backtest simulation equity curves).
+                    <strong>2. ⚡ Pro Quant Terminal Tab:</strong> Loads risk-adjusted quantitative metrics cards along with three advanced Plotly charts. Switch to this tab by clicking the <strong>⚡ Pro Quant Terminal</strong> button in the navigation bar.
                 </p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-400 pt-2">
+            <div class="border-t border-borderCol/50 pt-4 space-y-3 text-xs text-slate-400">
+                <h3 class="font-bold text-slate-200 text-sm">💡 How to Utilize the Pro Quant Terminal:</h3>
+                <ul class="list-decimal list-inside space-y-2 pl-1">
+                    <li>
+                        <strong class="text-slate-300">Evaluate Risk-Adjusted Returns:</strong> Compare the Sharpe, Sortino, and Calmar ratios. If they are greater than 1.0, the asset or strategy delivers solid returns relative to its risk profile. A Sortino ratio significantly higher than the Sharpe ratio indicates the strategy has successfully minimized downside volatility.
+                    </li>
+                    <li>
+                        <strong class="text-slate-300">Determine Causality (Lead-Lag):</strong> Look at the Lead-Lag Cross-Correlation bar chart. If the bars at positive lags (+1d to +3d) are high, news sentiment acts as a leading indicator of price returns. If negative lags (-1d to -3d) are high, the price action leads the news stories.
+                    </li>
+                    <li>
+                        <strong class="text-slate-300">Track Event abnormal response (Event Study):</strong> Inspect the Cumulative Abnormal Return (CAR) line chart. Look for the statistical significance asterisk (<code class="text-accentCyan">*</code>) in the legend. If present, it indicates the post-event drift at day +5 is mathematically significant (p-value < 0.05) and not just random market noise.
+                    </li>
+                    <li>
+                        <strong class="text-slate-300">Audit Strategy Efficiency (Backtest):</strong> Analyze the backtest simulation equity curve. Compare the blue line (Sentiment Strategy) against the purple dashed line (Buy & Hold benchmark) to see if the model generates positive alpha (outperformance) while incorporating realistic transaction fees and time-decay liquidations.
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-400 pt-4 border-t border-borderCol/50">
                 <div class="space-y-2">
                     <h3 class="font-bold text-slate-200">Price Chart Legend</h3>
                     <ul class="list-disc list-inside space-y-1.5 pl-1">

@@ -337,18 +337,49 @@
         <div id="content-layout" class="grid grid-cols-1 lg:grid-cols-10 gap-6">
             <!-- Left Side: Plotly Chart (70% width) -->
             <div class="lg:col-span-7 bg-cardBg border border-borderCol rounded-xl p-4 shadow-xl flex flex-col justify-between">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-md font-semibold text-slate-300 flex items-center gap-1.5">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <h3 class="text-md font-semibold text-slate-300 flex items-center gap-1.5 shrink-0">
                         <span class="inline-block w-2.5 h-2.5 rounded-full bg-accentCyan"></span> Price Action & Sentiment Overlay
                     </h3>
-                    <button id="export-prices-btn" class="hidden text-[10px] md:text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-1 px-2.5 border border-borderCol rounded transition">
-                        📥 Export Prices (CSV)
-                    </button>
+                    <!-- Chart Controls Toolbar -->
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <!-- Sentiment Filters -->
+                        <div class="flex items-center bg-slate-900/60 border border-borderCol rounded-lg px-2 py-1 gap-2 text-xs">
+                            <span class="text-slate-400 font-semibold mr-1">Filter:</span>
+                            <label class="flex items-center gap-1 cursor-pointer select-none text-bullishGreen font-bold">
+                                <input type="checkbox" id="filter-bullish" checked class="accent-bullishGreen cursor-pointer"> Bullish
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer select-none text-bearishRed font-bold">
+                                <input type="checkbox" id="filter-bearish" checked class="accent-bearishRed cursor-pointer"> Bearish
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer select-none text-slate-400 font-bold">
+                                <input type="checkbox" id="filter-neutral" checked class="accent-slate-400 cursor-pointer"> Neutral
+                            </label>
+                        </div>
+                        
+                        <!-- Zoom Controls -->
+                        <div class="flex items-center bg-slate-900/60 border border-borderCol rounded-lg p-1 gap-1 text-xs">
+                            <button type="button" id="chart-zoom-in" class="hover:bg-slate-800 text-slate-300 px-2 py-0.5 rounded transition font-bold" title="Zoom In">🔍+</button>
+                            <button type="button" id="chart-zoom-out" class="hover:bg-slate-800 text-slate-300 px-2 py-0.5 rounded transition font-bold" title="Zoom Out">🔍-</button>
+                            <button type="button" id="chart-zoom-reset" class="hover:bg-slate-800 text-slate-300 px-2 py-0.5 rounded transition font-bold" title="Reset Zoom">🔄</button>
+                        </div>
+                        
+                        <!-- Maximize Toggle -->
+                        <button type="button" id="chart-fullscreen-btn" class="bg-slate-900/60 hover:bg-slate-800 text-slate-300 border border-borderCol rounded-lg px-2.5 py-1 text-xs font-semibold flex items-center gap-1 transition" title="Toggle Fullscreen">
+                            🖥️ Maximize
+                        </button>
+                        
+                        <button id="export-prices-btn" class="hidden text-[10px] md:text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-1 px-2.5 border border-borderCol rounded transition">
+                            📥 Export Prices (CSV)
+                        </button>
+                    </div>
                 </div>
-                <div id="plotly-chart" class="w-full min-h-[450px]">
-                    <!-- Placeholder text before user submits -->
-                    <div class="h-[450px] flex items-center justify-center text-slate-500 border border-dashed border-borderCol rounded-lg">
-                        Enter details and click 'Generate Analysis' to render chart.
+                <div id="plotly-chart-wrapper" class="relative w-full">
+                    <div id="plotly-chart" class="w-full min-h-[450px]">
+                        <!-- Placeholder text before user submits -->
+                        <div class="h-[450px] flex items-center justify-center text-slate-500 border border-dashed border-borderCol rounded-lg">
+                            Enter details and click 'Generate Analysis' to render chart.
+                        </div>
                     </div>
                 </div>
                 <!-- Correlation Matrix Sub-Panel -->
@@ -932,6 +963,7 @@
             const config = { responsive: true, displayModeBar: false };
 
             Plotly.newPlot('plotly-chart', data, layout, config);
+            applySentimentFilters();
         }
 
         // Plotly Chart Render Logic for Comparison Mode
@@ -1060,6 +1092,7 @@
             
             const config = { responsive: true, displayModeBar: false };
             Plotly.newPlot('plotly-chart', traces, layout, config);
+            applySentimentFilters();
         }
 
         // Tab switching logic
@@ -1383,6 +1416,126 @@
 
             feedContainer.innerHTML = feedHtml;
         }
+
+        // ---------------------------------------------------------
+        // Chart Toolbar: Filters, Zoom, and Maximize controls
+        // ---------------------------------------------------------
+        function applySentimentFilters() {
+            const gd = document.getElementById('plotly-chart');
+            if (!gd || !gd.data) return;
+            
+            const showBull = document.getElementById('filter-bullish').checked;
+            const showBear = document.getElementById('filter-bearish').checked;
+            const showNeut = document.getElementById('filter-neutral').checked;
+            
+            const updateIndices = [];
+            const visibilityArray = [];
+            
+            gd.data.forEach((trace, idx) => {
+                if (trace.name === 'Bullish News') {
+                    updateIndices.push(idx);
+                    visibilityArray.push(showBull ? true : 'legendonly');
+                } else if (trace.name === 'Bearish News') {
+                    updateIndices.push(idx);
+                    visibilityArray.push(showBear ? true : 'legendonly');
+                } else if (trace.name === 'Neutral News') {
+                    updateIndices.push(idx);
+                    visibilityArray.push(showNeut ? true : 'legendonly');
+                }
+            });
+            
+            if (updateIndices.length > 0) {
+                Plotly.restyle('plotly-chart', { visible: visibilityArray }, updateIndices);
+            }
+        }
+
+        // Bind checkbox change events to update trace visibility
+        document.getElementById('filter-bullish').addEventListener('change', applySentimentFilters);
+        document.getElementById('filter-bearish').addEventListener('change', applySentimentFilters);
+        document.getElementById('filter-neutral').addEventListener('change', applySentimentFilters);
+
+        // Chart Zoom Controls
+        function zoomPlotly(factor) {
+            const gd = document.getElementById('plotly-chart');
+            if (!gd || !gd.layout || !gd.layout.xaxis) return;
+            const xRange = gd.layout.xaxis.range;
+            if (!xRange || xRange.length < 2) return;
+            
+            let start, end;
+            try {
+                start = new Date(xRange[0]).getTime();
+                end = new Date(xRange[1]).getTime();
+                if (isNaN(start) || isNaN(end)) {
+                    start = Number(xRange[0]);
+                    end = Number(xRange[1]);
+                }
+            } catch (e) {
+                return;
+            }
+            
+            if (isNaN(start) || isNaN(end)) return;
+            
+            const center = (start + end) / 2;
+            const halfSpan = (end - start) / 2;
+            
+            const newHalfSpan = halfSpan * factor;
+            const newStartVal = center - newHalfSpan;
+            const newEndVal = center + newHalfSpan;
+            
+            let finalStart, finalEnd;
+            if (typeof xRange[0] === 'string' && xRange[0].includes('-')) {
+                finalStart = new Date(newStartVal).toISOString().split('T')[0];
+                finalEnd = new Date(newEndVal).toISOString().split('T')[0];
+            } else {
+                finalStart = newStartVal;
+                finalEnd = newEndVal;
+            }
+            
+            Plotly.relayout('plotly-chart', {
+                'xaxis.range': [finalStart, finalEnd]
+            });
+        }
+
+        document.getElementById('chart-zoom-in').addEventListener('click', () => {
+            zoomPlotly(0.7);
+        });
+        document.getElementById('chart-zoom-out').addEventListener('click', () => {
+            zoomPlotly(1.35);
+        });
+        document.getElementById('chart-zoom-reset').addEventListener('click', () => {
+            Plotly.relayout('plotly-chart', {
+                'xaxis.autorange': true,
+                'yaxis.autorange': true
+            });
+        });
+
+        // Maximize/Fullscreen chart toggle
+        let isChartFullscreen = false;
+        document.getElementById('chart-fullscreen-btn').addEventListener('click', () => {
+            const wrapper = document.getElementById('plotly-chart-wrapper');
+            const btn = document.getElementById('chart-fullscreen-btn');
+            const chart = document.getElementById('plotly-chart');
+            
+            isChartFullscreen = !isChartFullscreen;
+            
+            if (isChartFullscreen) {
+                wrapper.classList.add('fixed', 'inset-0', 'z-50', 'bg-[#0D1117]', 'p-6', 'flex', 'flex-col', 'h-screen', 'w-screen');
+                chart.classList.remove('min-h-[450px]');
+                chart.classList.add('flex-1', 'h-full');
+                btn.innerText = " Exit Maximize";
+                btn.classList.add('bg-rose-900/60', 'hover:bg-rose-800', 'text-white');
+                btn.classList.remove('bg-slate-900/60', 'hover:bg-slate-800', 'text-slate-300');
+            } else {
+                wrapper.classList.remove('fixed', 'inset-0', 'z-50', 'bg-[#0D1117]', 'p-6', 'flex', 'flex-col', 'h-screen', 'w-screen');
+                chart.classList.add('min-h-[450px]');
+                chart.classList.remove('flex-1', 'h-full');
+                btn.innerText = "🖥️ Maximize";
+                btn.classList.remove('bg-rose-900/60', 'hover:bg-rose-800', 'text-white');
+                btn.classList.add('bg-slate-900/60', 'hover:bg-slate-800', 'text-slate-300');
+            }
+            
+            Plotly.Plots.resize('plotly-chart');
+        });
     </script>
 </body>
 </html>
