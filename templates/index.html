@@ -181,6 +181,28 @@
             </div>
         </div>
 
+        <!-- Dynamic Comparative Metric Grid (Visible in Multi-Asset Mode) -->
+        <div id="comparative-grid-container" class="hidden bg-cardBg border border-borderCol rounded-xl p-5 shadow-xl">
+            <h3 class="text-md font-semibold text-slate-300 mb-4 flex items-center gap-1.5">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-accentCyan"></span> Comparative Asset Performance Grid
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm text-slate-400">
+                    <thead>
+                        <tr class="border-b border-borderCol bg-slate-900/40 text-xs font-semibold text-slate-300">
+                            <th class="p-3">Ticker</th>
+                            <th class="p-3 text-right">Total Return (%)</th>
+                            <th class="p-3 text-right">Annual Volatility (%)</th>
+                            <th class="p-3 text-right">Max Drawdown (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparative-grid-body">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Loading Overlay (Initial Hidden) -->
         <div id="loader" class="hidden bg-cardBg border border-borderCol rounded-xl p-8 flex flex-col items-center justify-center space-y-4 shadow-2xl">
             <div class="w-12 h-12 border-4 border-accentCyan border-t-transparent rounded-full animate-spin"></div>
@@ -560,6 +582,31 @@
                     // Update Metrics Card 3: Max Drawdown (Deepest)
                     document.getElementById('drawdown-card-value').innerText = `${maxDD.toFixed(1)}%`;
 
+                    // Populate Comparative Grid
+                    const comparativeGridContainer = document.getElementById('comparative-grid-container');
+                    const comparativeGridBody = document.getElementById('comparative-grid-body');
+                    comparativeGridContainer.classList.remove('hidden');
+                    
+                    let gridHtml = "";
+                    validTickers.forEach(t => {
+                        const totalReturn = perfMetrics[t];
+                        const volatility = volatilities[t];
+                        const maxDrawdown = drawdowns[t];
+                        
+                        const returnColorClass = totalReturn >= 0 ? "text-emerald-400 font-bold" : "text-rose-500 font-bold";
+                        const drawdownColorClass = maxDrawdown < 0 ? "text-rose-500 font-bold" : "text-slate-400";
+                        
+                        gridHtml += `
+                            <tr class="border-b border-borderCol hover:bg-slate-900/20 transition">
+                                <td class="p-3 font-semibold text-slate-200">${t}</td>
+                                <td class="p-3 text-right ${returnColorClass}">${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(2)}%</td>
+                                <td class="p-3 text-right text-slate-300">${volatility.toFixed(2)}%</td>
+                                <td class="p-3 text-right ${drawdownColorClass}">${maxDrawdown.toFixed(2)}%</td>
+                            </tr>
+                        `;
+                    });
+                    comparativeGridBody.innerHTML = gridHtml;
+
                     // Hide/Show Correlation Matrix Table
                     const correlationContainer = document.getElementById('correlation-container');
                     const correlationTable = document.getElementById('correlation-table');
@@ -608,6 +655,7 @@
 
                 } else {
                     // Single Asset Mode
+                    document.getElementById('comparative-grid-container').classList.add('hidden');
                     lastFetchedPriceData = resData.price_data;
                     document.getElementById('export-prices-btn').classList.remove('hidden');
                     document.getElementById('correlation-container').classList.add('hidden');
@@ -865,19 +913,11 @@
             const colorPalette = ['#00F3FF', '#FFD700', '#FF7F50', '#DA70D6', '#32CD32', '#FF69B4', '#87CEEB'];
             const traces = [];
             
-            // Map primary ticker's dates to rebased prices for news marker alignment
-            const primaryData = priceComparison[primaryTicker];
-            const primaryFirstPrice = primaryData[0].price;
-            const primaryRebasedMap = {};
-            primaryData.forEach(p => {
-                primaryRebasedMap[p.date] = (p.price / primaryFirstPrice) * 100;
-            });
-            
             validTickers.forEach((ticker, idx) => {
                 const priceData = priceComparison[ticker];
                 const dates = priceData.map(p => p.date);
                 const firstPrice = priceData[0].price;
-                const rebasedPrices = priceData.map(p => (p.price / firstPrice) * 100);
+                const rebasedPrices = priceData.map(p => ((p.price / firstPrice) - 1) * 100);
                 
                 const color = colorPalette[idx % colorPalette.length];
                 
@@ -886,32 +926,27 @@
                     y: rebasedPrices,
                     type: 'scatter',
                     mode: 'lines',
-                    name: `${ticker} (Indexed)`,
+                    name: `${ticker} (Return %)`,
                     line: {
                         color: color,
                         width: 2.0
                     },
-                    hovertemplate: `<b>Date</b>: %{x}<br><b>${ticker} Rebased</b>: %{y:.2f}%<extra></extra>`
+                    hovertemplate: `<b>Date</b>: %{x}<br><b>${ticker} Return</b>: %{y:+.2f}%<extra></extra>`
                 });
             });
             
-            // Group news events by sentiment and plot them relative to the primary reference asset's line
+            // Group news events by sentiment and plot them strictly along the 0% baseline (x-axis)
             const bullishNews = newsData.filter(n => n['Sentiment Label'] === 'Bullish');
             const bearishNews = newsData.filter(n => n['Sentiment Label'] === 'Bearish');
             const neutralNews = newsData.filter(n => n['Sentiment Label'] === 'Neutral');
             
-            const getNewsY = (n) => {
-                const val = primaryRebasedMap[n.MappedDate];
-                return val !== undefined ? val : 100;
-            };
-            
             // Bullish news
             traces.push({
                 x: bullishNews.map(n => n.MappedDate),
-                y: bullishNews.map(n => getNewsY(n)),
+                y: bullishNews.map(() => 0),
                 type: 'scatter',
                 mode: 'markers',
-                name: `Bullish News (${primaryTicker})`,
+                name: `Bullish News`,
                 marker: {
                     color: '#00E676',
                     symbol: 'triangle-up',
@@ -928,10 +963,10 @@
             // Bearish news
             traces.push({
                 x: bearishNews.map(n => n.MappedDate),
-                y: bearishNews.map(n => getNewsY(n)),
+                y: bearishNews.map(() => 0),
                 type: 'scatter',
                 mode: 'markers',
-                name: `Bearish News (${primaryTicker})`,
+                name: `Bearish News`,
                 marker: {
                     color: '#FF1744',
                     symbol: 'triangle-down',
@@ -948,10 +983,10 @@
             // Neutral news
             traces.push({
                 x: neutralNews.map(n => n.MappedDate),
-                y: neutralNews.map(n => getNewsY(n)),
+                y: neutralNews.map(() => 0),
                 type: 'scatter',
                 mode: 'markers',
-                name: `Neutral News (${primaryTicker})`,
+                name: `Neutral News`,
                 marker: {
                     color: '#90A4AE',
                     symbol: 'circle',
@@ -979,9 +1014,9 @@
                 yaxis: {
                     gridcolor: '#21262D',
                     linecolor: '#30363D',
-                    title: { text: 'Indexed Value (Starts at 100)', font: { color: '#8B949E', size: 11 } },
+                    title: { text: 'Normalized % Change (Base 0%)', font: { color: '#8B949E', size: 11 } },
                     tickfont: { color: '#8B949E' },
-                    tickprefix: ''
+                    ticksuffix: '%'
                 },
                 legend: {
                     orientation: 'h',
@@ -1190,7 +1225,7 @@
                 const headers = ['Date'];
                 tickers.forEach(t => {
                     headers.push(`${t}_Raw_Close`);
-                    headers.push(`${t}_Indexed_Value`);
+                    headers.push(`${t}_Normalized_Return_Percent`);
                 });
                 
                 const tickerDataMaps = {};
@@ -1201,7 +1236,7 @@
                         lastFetchedPriceData[t].forEach(p => {
                             tickerDataMaps[t][p.date] = {
                                 raw: p.price,
-                                rebased: (p.price / firstPrice) * 100
+                                rebased: ((p.price / firstPrice) - 1) * 100
                             };
                         });
                     }
@@ -1222,7 +1257,7 @@
                     return row;
                 });
                 csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-                filename = `${lastFetchedTicker.replace(/,/g, '_')}_comparison_indexed.csv`;
+                filename = `${lastFetchedTicker.replace(/,/g, '_')}_comparison_returns.csv`;
             }
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
